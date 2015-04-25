@@ -1,0 +1,126 @@
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'eclipse'
+apply plugin: 'application'
+apply plugin: 'idea'
+
+
+defaultTasks 'clean', 'build', 'publish', 'installApp'
+group = 'coyote'
+version = '0.1'
+mainClassName = "coyote.cli.CLI"
+
+
+
+jar {
+    manifest {
+        attributes  'Implementation-Title': 'Coyote CLI quickstart template',
+					'Provider': 'Coyote CodeWorks',
+					'Implementation-Version': version    }
+}
+
+
+repositories {
+
+	mavenLocal()
+	
+	mavenCentral()
+}
+
+
+ext {
+	slf4jVersion = '1.7.5'
+	junitVersion = '4.11'
+	snapiVersion = '0.0.1'
+	logbackVersion = '0.9.30'
+	springContextVersion = '4.0.2.RELEASE'
+	springJdbcVersion = '3.2.8.RELEASE'
+	cliVersion = '1.2'
+	commonCfgVersion = '1.6'
+	
+}
+dependencies {
+	
+		// Logging via slf4j and Logback implementation
+		compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
+		compile "ch.qos.logback:logback-classic:$logbackVersion"
+		compile "ch.qos.logback:logback-core:$logbackVersion"
+
+		// SNAPI (ServiceNow API)
+		compile "coyote:snapi:$snapiVersion"
+    
+		// Command line tools
+		compile "commons-cli:commons-cli:$cliVersion"
+
+		// Configuration properties
+		compile "commons-configuration:commons-configuration:$commonCfgVersion"
+	
+		// For connections to databases
+		compile "org.springframework:spring-jdbc:$springJdbcVersion"
+
+		// For providing extensibility through IoC
+		compile "org.springframework:spring-context:$springContextVersion"
+
+		// UnitTesting
+		testCompile "junit:junit:$junitVersion"	
+}
+
+
+// custom tasks for creating source/javadoc jars
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = 'javadoc'
+	from javadoc.destinationDir
+}
+
+
+// add javadoc/source jar tasks as artifacts
+artifacts {
+	archives sourcesJar, javadocJar
+}
+
+
+// hack to get the configuration directory in the classpath of the distribution
+// it might be necessary to set the classpath of your IDE to 'src/dist/cfg'
+startScripts {
+  classpath += files('src/dist/cfg')
+  doLast {
+    def windowsScriptFile = file getWindowsScript()
+    def unixScriptFile    = file getUnixScript()
+    windowsScriptFile.text = windowsScriptFile.text.replace('%APP_HOME%\\lib\\cfg', '%APP_HOME%\\cfg')
+    unixScriptFile.text  = unixScriptFile.text.replace('$APP_HOME/lib/cfg', '$APP_HOME/cfg')
+  }
+}
+
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+
+			artifact sourcesJar {
+				classifier "sources"
+			}
+
+			artifact javadocJar {
+				classifier "javadoc"
+			}
+		}
+	}
+
+	repositories {
+		mavenLocal()
+	}
+}
+
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.12'
+}
+

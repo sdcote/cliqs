@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} %-5level %logger{5}.%M\(%line\) - %msg%n</pattern>
+		</encoder>
+	</appender>
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+		<file>snowstorm.log</file>
+		<append>false</append>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+	<!-- Suppress the noise of the Apache HTTP classes -->
+	<logger name="org.apache.http.wire" level="warn"/>
+	<logger name="org.apache.http.headers" level="warn"/>
+	<logger name="org.apache.http.client.protocol" level="warn"/>
+	<logger name="org.apache.http.impl.client" level="warn"/>
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+	<!-- Suppress the noise of the Spring Framework classes -->
+	<logger name="org.springframework.context.support" level="warn"/>
+	<logger name="org.springframework.beans.factory.xml" level="warn"/>
+	<logger name="org.springframework.beans.factory.support" level="warn"/>
+	<logger name="org.springframework.core.env" level="warn"/>
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+	<!-- Configure logging for our application -->
+	<logger name="coyote.cli" level="DEBUG"/>
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+	<root>
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</root>
+
+</configuration>

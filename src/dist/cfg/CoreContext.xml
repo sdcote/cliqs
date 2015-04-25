@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	   					   http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+<!-- Adding actions to the CLI is as easy as editing this file. -->
+<!-- 1) Create a bean -->
+<!-- 2) The add an entry in the CLI bean map. -->
+
+
+<!-- Step #1 Add the Actions supported by the library -->
+<!--         Use any Spring Bean wiring you want -->
+    <bean id="test" class="coyote.cli.actions.Test"> </bean> 
+    <bean id="encrypt" class="coyote.cli.actions.EncryptedString" /> 
+
+
+<!-- Step #2 Populate the Command Line Interface with the Actions defined above -->
+<!--         The entry key will be used as the NOUN for action lookup -->
+    <bean id="cli" class="coyote.cli.CLI"> 
+    	<property name="ActionMap">
+    		<map>
+    			<entry key="test" value-ref="test"/>
+    			<entry key="encrypt" value-ref="encrypt"/>
+    		</map>
+    	</property>
+    </bean> 
+
+
+</beans>
