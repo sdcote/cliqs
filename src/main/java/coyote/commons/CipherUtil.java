@@ -34,9 +34,10 @@ import coyote.commons.codec.Base32;
  */
 public class CipherUtil {
 
-  private static final String SECRET = "coyotecliqs";
-  private static final String DEFAULT = "default";
-  private static String defaultCipherName = DEFAULT;
+  private static final String DEFAULT_SECRET = "coyotecliqs";
+  private static final String DEFAULT_CIPHER = "blowfish";
+  private static String defaultSecret = DEFAULT_SECRET;
+  private static String defaultCipherName = DEFAULT_CIPHER;
 
   private static final Map<String, Cipher> cipherMap = new HashMap<String, Cipher>();
 
@@ -75,7 +76,7 @@ public class CipherUtil {
 
     // Initialize the cipher with our secret key here we just use the UTF16 
     // encoding of our key string
-    cipher.init( StringUtil.getBytesUtf8( SECRET ) );
+    cipher.init( StringUtil.getBytesUtf8( DEFAULT_SECRET ) );
 
     // Encrypt the text with the UTF16 encoded bytes our our clear text string 
     byte[] cipherdata = cipher.encrypt( StringUtil.getBytesUtf16( token ) );
@@ -100,7 +101,7 @@ public class CipherUtil {
     Cipher cipher = CipherUtil.getCipher( defaultCipherName );
 
     // Initialize the cipher with our secret key
-    cipher.init( StringUtil.getBytesUtf8( SECRET ) );
+    cipher.init( StringUtil.getBytesUtf8( DEFAULT_SECRET ) );
 
     // decode the bytes
     byte[] cipherdata = new Base32().decode( ciphertext );
@@ -143,6 +144,26 @@ public class CipherUtil {
    */
   public static void setDefaultCipherName( String name ) {
     CipherUtil.defaultCipherName = name;
+  }
+
+
+
+
+  /**
+   * @return the default secret used as an initialization vector or key
+   */
+  public static String getDefaultSecret() {
+    return defaultSecret;
+  }
+
+
+
+
+  /**
+   * @param token the default secret to set as an initialization vector or key
+   */
+  public static void setDefaultSecret( String token ) {
+    CipherUtil.defaultSecret = token;
   }
 
 }
