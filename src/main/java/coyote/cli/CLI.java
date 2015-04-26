@@ -68,7 +68,7 @@ public class CLI extends AbstractAction {
 
 	// Environments Supported
 	private static final String DEV = "DEV";
-	private static final String ST = "ST";
+	private static final String TEST = "TEST";
 	private static final String UAT = "UAT";
 	private static final String PROD = "PROD";
 
@@ -158,7 +158,7 @@ public class CLI extends AbstractAction {
 		o.addOption(new Option(OPT_VERBOSE, "verbose output, more object data displayed."));
 		o.addOption(new Option(OPT_DEBUG, "debugging messages, describes what's happening."));
 
-		o.addOption(OptionBuilder.hasArg().isRequired(false).withArgName("environment").withType(String.class).withDescription("The environment (e.g. DEV, ST, PROD) to use.").create(OPT_ENV));
+		o.addOption(OptionBuilder.hasArg().isRequired(false).withArgName("environment").withType(String.class).withDescription("The environment (e.g. DEV, TEST, PROD) to use.").create(OPT_ENV));
 		o.addOption(OptionBuilder.hasArg().isRequired(false).withArgName("CSV,TAB").withType(String.class).withDescription("The format of the output. (Default is text)").create(OPT_FMT));
 		o.addOption(OptionBuilder.hasArg().isRequired(false).withArgName("filename").withType(String.class).withDescription("Output results to file (try 'default')").create(OPT_OUT));
 
@@ -271,7 +271,7 @@ public class CLI extends AbstractAction {
 				setEnvironment(environ.toUpperCase());
 
 				// Make sure it is one of the expected values
-				if (DEV.equals(getEnvironment()) || ST.equals(getEnvironment()) || UAT.equals(getEnvironment()) || PROD.equals(getEnvironment())) {
+				if (DEV.equals(getEnvironment()) || TEST.equals(getEnvironment()) || UAT.equals(getEnvironment()) || PROD.equals(getEnvironment())) {
 					info("Using the '" + getEnvironment() + "' environment.");
 				} else {
 					exit("Unsupported environment '" + environ + "'", 1);
