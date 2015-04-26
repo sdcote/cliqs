@@ -17,21 +17,25 @@
 
 	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 	<!-- Suppress the noise of the Apache HTTP classes -->
-	<logger name="org.apache.http.wire" level="warn"/>
-	<logger name="org.apache.http.headers" level="warn"/>
 	<logger name="org.apache.http.client.protocol" level="warn"/>
+	<logger name="org.apache.http.conn" level="warn"/>
+	<logger name="org.apache.http.headers" level="warn"/>
 	<logger name="org.apache.http.impl.client" level="warn"/>
+	<logger name="org.apache.http.impl.conn" level="warn"/>
+	<logger name="org.apache.http.impl.execchain" level="warn"/>
+	<logger name="org.apache.http.wire" level="warn"/>
 	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 	<!-- Suppress the noise of the Spring Framework classes -->
-	<logger name="org.springframework.context.support" level="warn"/>
-	<logger name="org.springframework.beans.factory.xml" level="warn"/>
 	<logger name="org.springframework.beans.factory.support" level="warn"/>
+	<logger name="org.springframework.beans.factory.xml" level="warn"/>
+	<logger name="org.springframework.context.support" level="warn"/>
 	<logger name="org.springframework.core.env" level="warn"/>
 	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 	<!-- Configure logging for our application -->
-	<logger name="coyote.cli" level="DEBUG"/>
+	<logger name="coyote.cli" level="WARN"/>
+	<logger name="coyote.commons" level="WARN"/>
 	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-	<root>
+	<root level="DEBUG">
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="FILE" />
 	</root>
