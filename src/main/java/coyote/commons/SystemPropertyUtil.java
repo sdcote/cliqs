@@ -22,12 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-
 /**
  * Simple set of utilities to interact with System Properties.
  */
 public class SystemPropertyUtil {
-  
+
   /** System property which specifies the user name for the proxy server */
   public static final String PROXY_USER = "http.proxyUser";
 
@@ -240,7 +239,7 @@ public class SystemPropertyUtil {
   /**
    * @param key
    * 
-   * @return
+   * @return the system property with the given key, or its default if it is set.
    */
   public static String getString( String key ) {
     return System.getProperties().getProperty( key );
