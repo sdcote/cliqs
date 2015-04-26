@@ -26,6 +26,7 @@ csharp/
 # Testing Results #
 ###################
 *.log
+/cliqs.properties
 
 
 # Package Files #
