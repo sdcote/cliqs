@@ -55,15 +55,7 @@ public abstract class AbstractAction implements Action {
   /** The format in which our output should be displayed. Text is the default.*/
   protected String _displayFormat = null;
 
-  // The properties stored in the configuration
-  public static final String CSDB_DB_USER = "csdb.db.user";
-  public static final String CSDB_DB_PASSWORD = "csdb.db.pass";
-  public static final String CSDB_DB_URL = "csdb.db.url";
-  public static final String CMDB_DB_USER = "cmdb.db.user";
-  public static final String CMDB_DB_PASSWORD = "cmdb.db.pass";
-  public static final String CMDB_DB_URL = "cmdb.db.url";
-  public static final String OPER_LOGIN = "opr.user";
-  public static final String OPER_PASSWORD = "oper.pass";
+  // The properties stored in the configuration, these will vary by project
   public static final String SAAS_HOST = "saas.host";
   public static final String SAAS_PORT = "saas.port";
   public static final String SAAS_SCHEME = "saas.scheme";
@@ -259,15 +251,6 @@ public abstract class AbstractAction implements Action {
 
 
 
-
-  //	public static CsdbDAO getCommonSharedDAO() {
-  //
-  //		if (_commonSharedDAO == null) {
-  //			debug("Connecting as " + getProperty(CSDB_DB_USER) + " to " + getProperty(CSDB_DB_URL));
-  //			_commonSharedDAO = new CsdbDAO(getProperty(CSDB_DB_URL), getProperty(CSDB_DB_USER), getEncryptedProperty(CSDB_DB_PASSWORD));
-  //		}
-  //		return _commonSharedDAO;
-  //	}
 
   /**
    * Format the string using the default formatting for all actions.
