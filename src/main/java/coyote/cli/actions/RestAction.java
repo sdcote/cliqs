@@ -12,31 +12,26 @@
 package coyote.cli.actions;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.List;
 
-import org.apache.http.Header;
-import org.apache.http.HeaderIterator;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
+import org.apache.http.HttpRequest;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
 import coyote.commons.StringUtil;
+import coyote.dataframe.DataFrame;
+import coyote.dataframe.marshal.JSONMarshaler;
+import coyote.snow.worker.Response;
 
 
 public abstract class RestAction extends AbstractAction {
@@ -56,39 +51,23 @@ public abstract class RestAction extends AbstractAction {
   /** System property which specifies the NTLM domain for proxy user auth */
   public static final String PROXY_DOMAIN = "http.proxyDomain";
 
+  /** This is the persistent http client we will use to send all our requests */
+  private final CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+
+  /** Create a context in which we will execute our request */
+  private final HttpClientContext localContext = HttpClientContext.create();
+
+  /** HTTP Client configuration settings */
+  protected RequestConfig config = RequestConfig.custom().build();
+
+  /** Holds credentials to proxies and hosts along with different auth schemes */
+  final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
 
 
-  public RestAction() {}
 
-
-
-
-  /**
-   * This performs a basic HTTP GET for the given URI
-   * 
-   * @param scheme the protocol scheme (e.g. http or https)
-   * @param host Host name or IP of the server
-   * @param port the port
-   * @param uri the URI to get (default if null or empty = "/")
-   * @param user user name credential (optional)
-   * @param password password for given user name
-   * 
-   * @return The body of the response
-   */
-  public String httpGet( String scheme, String host, int port, String uri, String user, String password ) {
-    String URI = "/";
-
-    // Make sure we have a URI
-    if ( uri != null || uri.trim().length() > 0 ) {
-      URI = uri;
-    }
-
-    HttpGet httpget = new HttpGet( URI );
-
-    HttpHost target = new HttpHost( host, port, scheme );
-
-    // retrieve proxy related properties
+  public RestAction() {
+    // retrieve proxy related system properties
     final String proxyhost = System.getProperty( PROXY_HOST );
     final String proxyport = System.getProperty( PROXY_PORT );
     final String proxyuser = System.getProperty( PROXY_USER );
@@ -98,160 +77,81 @@ public abstract class RestAction extends AbstractAction {
     // If there are both proxy host and port values, configure the request
     // to use them
     if ( StringUtil.isNotBlank( proxyhost ) && StringUtil.isNotBlank( proxyport ) ) {
-      HttpHost proxy = new HttpHost( proxyhost, Integer.parseInt( proxyport ) );
-      RequestConfig config = RequestConfig.custom().setProxy( proxy ).build();
-      httpget.setConfig( config );
+      final HttpHost proxy = new HttpHost( proxyhost, Integer.parseInt( proxyport ) );
+      config = RequestConfig.custom().setProxy( proxy ).build();
 
-      debug( "Executing request " + httpget.getRequestLine() + " to " + target + " via " + proxy );
-    } else {
-      debug( "Executing request " + httpget.getRequestLine() + " to " + target );
-    }
+      // If we have proxy credentials, add them to the credentials provider
+      if ( StringUtil.isNotBlank( proxyuser ) && StringUtil.isNotBlank( proxypass ) ) {
 
-    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+        // if there is a proxy domain, assume NTLM proxy
+        if ( StringUtil.isNotBlank( proxydomain ) ) {
+          credentialsProvider.setCredentials( new AuthScope( proxyhost, Integer.parseInt( proxyport ), null, "NTLM" ), new NTCredentials( proxyuser, proxypass, null, proxydomain ) );
+        } else {
+          // otherwise regular proxy authentication
+          credentialsProvider.setCredentials( new AuthScope( proxyhost, Integer.parseInt( proxyport ) ), new UsernamePasswordCredentials( proxyuser, proxypass ) );
+        } // proxy domain - NTLM
 
-    // Create a context in which we will execute our request
-    HttpClientContext localContext = HttpClientContext.create();
+      } // proxy credentials
 
-    // lets try creating an AuthCache instance
-    AuthCache authCache = new BasicAuthCache();
-    BasicScheme basicAuth = new BasicScheme();
-    authCache.put( target, basicAuth );
-    localContext.setAuthCache( authCache );
+    } // proxy host & port
 
-    // If we have credentials, set them in the local client context
-    if ( user != null && password != null ) {
-      CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-
-      // place the credentials provider in the client context
-      localContext.setCredentialsProvider( credentialsProvider );
-
-      // If we have proxy credentials, add them
-      if ( StringUtil.isNotBlank( proxyhost ) && StringUtil.isNotBlank( proxyport ) && StringUtil.isNotBlank( proxyuser ) && StringUtil.isNotBlank( proxypass ) && StringUtil.isNotBlank( proxydomain ) ) {
-        debug( "Setting NTLM proxy config" );
-        credentialsProvider.setCredentials( new AuthScope( proxyhost, Integer.parseInt( proxyport ), null, "NTLM" ), new NTCredentials( proxyuser, proxypass, null, proxydomain ) );
-      }
-
-      // Now set the credentials for the target host:port
-      // credentialsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort()), new UsernamePasswordCredentials(user, password));
-      credentialsProvider.setCredentials( AuthScope.ANY, new UsernamePasswordCredentials( user, password ) );
-      // credentialsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort(),"Service-now",AuthScope.ANY_SCHEME), new UsernamePasswordCredentials(user, password));
-      // credentialsProvider.setCredentials( new AuthScope(AuthScope.ANY_HOST,AuthScope.ANY_PORT,"Service-now",AuthScope.ANY_SCHEME), new UsernamePasswordCredentials(user, password));
-
-    }
-
-    try {
-
-      // Create the request for the URI
-      HttpGet request = new HttpGet( URI );
-
-      // Set the content type to JSON
-      request.addHeader( "content-type", "application/json" );
-
-      // Execute the request
-      CloseableHttpResponse response = httpClient.execute( target, httpget, localContext );
-
-      // perform a little debug logging if required
-      if ( isDebug() ) {
-        debug( "RESPONSE: " + response.getStatusLine().getProtocolVersion() + "  " + response.getStatusLine().getStatusCode() + " - " + response.getStatusLine().getReasonPhrase() );
-        for ( HeaderIterator it = response.headerIterator(); it.hasNext(); ) {
-          Header header = (Header)it.next();
-          debug( "HEADER: " + header );
-        }
-      }
-
-      String body = EntityUtils.toString( response.getEntity(), "UTF-8" );
-      debug( "BODY: " + body );
-
-      return body;
-    } catch ( IOException ex ) {
-      ex.printStackTrace();
-    }
-    finally {
-      try {
-        httpClient.close();
-      } catch ( IOException e ) {
-        e.printStackTrace();
-      }
-    }
-    return null;
+    // place the credentials provider in the client context
+    localContext.setCredentialsProvider( credentialsProvider );
   }
 
 
 
 
   /**
-   * This performs a basic HTTP POST to the given URI with the given body
+   * Execute the request over the current connection and return the results.
    * 
-   * @param host Host name or IP of the server
-   * @param port the port
-   * @param uri the URI to get (default if null or empty = "/")
-   * @param user user name credential (optional)
-   * @param password password for given user name
-   * @param body the body of the post request containing the data to post.
+   * <p>Only one record is expected to be returned.</p>
    * 
-   * @return The HTTP Response
+   * <p>This method makes all calls uniform in nature.</p>
+   * 
+   * @param request
+   * 
+   * @return a dataframe containing the results
+   * @throws IOException 
    */
-  public HttpResponse httpPost( String host, int port, String uri, String user, String password, String body ) {
-    String URI = "/";
+  protected Response execute( HttpHost target, final HttpRequest request ) throws IOException {
+    final Response response = new Response( request );
 
-    // Make sure we have a URI
-    if ( uri != null || uri.trim().length() > 0 ) {
-      URI = uri;
-    }
+    // Set the content type to JSON
+    request.setHeader( "content-type", "application/json" );
+    request.setHeader( "accept", "application/json" );
 
-    HttpHost targetHost = new HttpHost( host, port, "http" );
-    debug( targetHost + URI );
+    // Execute the request
+    try (CloseableHttpResponse httpResponse = httpClient.execute( target, request, localContext )) {
 
-    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-    try {
+      final int status = httpResponse.getStatusLine().getStatusCode();
+      response.setStatusCode( status );
+      response.setStatusPhrase( httpResponse.getStatusLine().getReasonPhrase() );
+      debug( String.format( "Request:\r\n    %s\r\nResponse:\r\n    %s", request.toString(), httpResponse.getStatusLine().toString() ) );
 
-      // Create the request for the URI
-      HttpPost request = new HttpPost( URI );
+      // Check for a body
+      if ( httpResponse.getEntity() != null ) {
 
-      // set the body of the request
-      StringEntity params = new StringEntity( body );
-      request.setEntity( params );
+        // get the body as a string
+        final String body = EntityUtils.toString( httpResponse.getEntity(), "UTF-8" );
 
-      // Set the content type to JSON
-      request.addHeader( "content-type", "application/json" );
+        // Parse the body into frames
+        final List<DataFrame> frames = JSONMarshaler.marshal( body );
 
-      // Create a context in which we will execute our request
-      HttpClientContext localContext = HttpClientContext.create();
+        // Retrieve the first frame
+        if ( frames.size() > 0 ) {
+          if ( frames.size() > 1 ) {
+            error( "The response contained more than one object - only using first response object" );
+          }
+          response.setResult( frames.get( 0 ) );
 
-      // If we have credentials, set them in the local client context
-      if ( user != null && password != null ) {
-        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials( AuthScope.ANY, new UsernamePasswordCredentials( user, password ) );
-        localContext.setCredentialsProvider( credentialsProvider );
-      }
+        } // if there are frames parsed from the body
 
-      // Execute the request
-      HttpResponse result = httpClient.execute( targetHost, request, localContext );
+      } // if there is a response entity
 
-      // perform a little debug logging if required
-      if ( isDebug() ) {
-        debug( result.getStatusLine().getProtocolVersion() + "  " + result.getStatusLine().getStatusCode() + " - " + result.getStatusLine().getReasonPhrase() );
-        for ( Iterator it = result.headerIterator(); it.hasNext(); ) {
-          Header header = (Header)it.next();
-          debug( header );
-        }
-        String json = EntityUtils.toString( result.getEntity(), "UTF-8" );
-        debug( json );
-      }
+    } // try block
 
-      return result;
-    } catch ( IOException ex ) {
-      ex.printStackTrace();
-    }
-    finally {
-      try {
-        httpClient.close();
-      } catch ( IOException e ) {
-        e.printStackTrace();
-      }
-    }
-
-    return null;
+    return response;
   }
 
 }
