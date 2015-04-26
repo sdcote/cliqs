@@ -13,7 +13,7 @@
 <!--         Use any Spring Bean wiring you want -->
     <bean id="test" class="coyote.cli.actions.Test"> </bean> 
     <bean id="encrypt" class="coyote.cli.actions.EncryptedString" /> 
-    <bean id="rest" class="coyote.cli.actions.Restest" /> 
+    <bean id="geoip" class="coyote.cli.actions.GeoIp" /> 
 
 
 <!-- Step #2 Populate the Command Line Interface with the Actions defined above -->
@@ -23,7 +23,7 @@
     		<map>
     			<entry key="test" value-ref="test"/>
     			<entry key="encrypt" value-ref="encrypt"/>
-    			<entry key="getrest" value-ref="rest"/>
+    			<entry key="geoip" value-ref="geoip"/>
     		</map>
     	</property>
     </bean> 
