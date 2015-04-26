@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Stephan D. Cote' - All rights reserved.
+ * Copyright (c) 2015 Stephan D. Cote' - All rights reserved.
  * 
  * This program and the accompanying materials are made available under the 
  * terms of the MIT License which accompanies this distribution, and is 
@@ -7,9 +7,9 @@
  *
  * Contributors:
  *   Stephan D. Cote 
- *      - Initial API and implementation
+ *      - Initial concept and initial implementation
  */
-package coyote.cli;
+package coyote.commons;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,20 +22,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-/**
- * This allows for the population of the System properties from a variety of
- * locations.
- * 
- * <p>The first place searched for the named properties file is the class path 
- * then the home directory of the user running the Java runtime. Next, the 
- * system property of {@code cfg.dir} is checked for a directory location. If 
- * found, the named property file in that directory is read and over-writes any 
- * existing properties with values from that location. Finally, the current 
- * directory is checked and all those properties overwrites any existing 
- * properties.</p>
- */
-public class SystemPropertiesLoader {
 
+/**
+ * Simple set of utilities to interact with System Properties.
+ */
+public class SystemPropertyUtil {
+  
   /** System property which specifies the user name for the proxy server */
   public static final String PROXY_USER = "http.proxyUser";
 
@@ -51,7 +43,7 @@ public class SystemPropertiesLoader {
    */
   public static final String CONFIG_DIR = "cfg.dir";
 
-  private static final Logger LOG = LoggerFactory.getLogger( SystemPropertiesLoader.class );
+  private static final Logger LOG = LoggerFactory.getLogger( SystemPropertyUtil.class );
 
 
 
@@ -63,13 +55,13 @@ public class SystemPropertiesLoader {
    * name. Therefore passing this the name of 'app' will result in a file named
    * 'app.properties' being used.</p>
    * 
-   * <p>this method will search for the named file in 4 locations, each 
+   * <p>This method will search for the named file in 4 locations, each 
    * subsequent found file being used to augment and over write the properties 
-   * of previously loaded properties files:<ul>
+   * of previously loaded properties files:<ol>
    * <li>currently set class path</li>
    * <li>home directory of the user running the JVM</li>
    * <li>directory specified by the {@code cfg.dir} system property</li>
-   * <li>current working directory</li></ul></p>
+   * <li>current working directory</li></ol></p>
    * 
    * @param name root name of the file to search
    */
@@ -100,7 +92,7 @@ public class SystemPropertiesLoader {
     Properties props = new Properties();
     String resourcename = name + ".properties";
     try {
-      props.load( SystemPropertiesLoader.class.getClassLoader().getResourceAsStream( resourcename ) );
+      props.load( SystemPropertyUtil.class.getClassLoader().getResourceAsStream( resourcename ) );
       LOG.debug( "Loading {} properties from classpath resource '{}'", props.size(), resourcename );
       System.getProperties().putAll( props );
     } catch ( Exception e ) {
@@ -218,6 +210,40 @@ public class SystemPropertiesLoader {
       }
     }
     return true;
+  }
+
+
+
+
+  /**
+   * Set a system property.
+   * 
+   * <p>If the value is null, then the property will be removed from the system 
+   * properties.</p>
+   * 
+   * @param name the name of the property to set
+   * @param value the value of the property to set
+   */
+  public static void setProperty( String name, String value ) {
+    if ( name != null ) {
+      if ( value != null ) {
+        System.getProperties().setProperty( name, value );
+      } else {
+        System.getProperties().remove( name );
+      }
+    }
+  }
+
+
+
+
+  /**
+   * @param key
+   * 
+   * @return
+   */
+  public static String getString( String key ) {
+    return System.getProperties().getProperty( key );
   }
 
 }

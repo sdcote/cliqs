@@ -14,7 +14,7 @@ mainClassName = "coyote.cli.CLI"
 
 jar {
     manifest {
-        attributes  'Implementation-Title': 'Coyote CLI quickstart template',
+        attributes  'Implementation-Title': 'Coyote CLI Quick Start template',
 					'Provider': 'Coyote CodeWorks',
 					'Implementation-Version': version    }
 }
@@ -36,7 +36,6 @@ ext {
 	springContextVersion = '4.0.2.RELEASE'
 	springJdbcVersion = '3.2.8.RELEASE'
 	cliVersion = '1.2'
-	commonCfgVersion = '1.6'
 	
 }
 dependencies {
@@ -52,9 +51,6 @@ dependencies {
 		// Command line tools
 		compile "commons-cli:commons-cli:$cliVersion"
 
-		// Configuration properties
-		compile "commons-configuration:commons-configuration:$commonCfgVersion"
-	
 		// For connections to databases
 		compile "org.springframework:spring-jdbc:$springJdbcVersion"
 

@@ -34,6 +34,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import coyote.cli.actions.AbstractAction;
 import coyote.cli.actions.Action;
 import coyote.cli.actions.ActionException;
+import coyote.commons.SystemPropertyUtil;
 
 /**
  * CLI - This is the command line interface to the load actions.
@@ -369,8 +370,8 @@ public class CLI extends AbstractAction {
 	 */
 	public static void main(final String[] args) {
 	  
-		// Load properties
-		SystemPropertiesLoader.load(appname);
+		// Load system properties from conventional locations
+		SystemPropertyUtil.load(appname);
 
 		// Load configuration context from the class path
 		@SuppressWarnings("resource")

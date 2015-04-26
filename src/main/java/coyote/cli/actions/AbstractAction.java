@@ -23,14 +23,12 @@ import java.util.Date;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 
 import coyote.cli.CLI;
 import coyote.cli.template.SymbolTable;
 import coyote.cli.template.Template;
 import coyote.commons.CipherUtil;
+import coyote.commons.SystemPropertyUtil;
 
 
 public abstract class AbstractAction implements Action {
@@ -38,12 +36,6 @@ public abstract class AbstractAction implements Action {
   private static final String FMT_TXT = "txt";
   private static final String FMT_CSV = "csv";
   private static final String FMT_TAB = "tab";
-
-  /** The database access object for the common shared database */
-  //private static CsdbDAO _commonSharedDAO = null;
-
-  /** Configuration properties loaded into the system */
-  private static Configuration _config = null;
 
   /** The database environment to use */
   private static String _env = "DEV";
@@ -83,8 +75,6 @@ public abstract class AbstractAction implements Action {
   protected static final DecimalFormat NUMBER_FORMAT = new DecimalFormat( "###,###,###,###,###" );
   private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat( "#,###,##0.00" );
 
-  private static final String PROPERTY_FILE_NAME = "snowstorm.properties";
-
   /** Represents 1 Kilo Byte ( 1024 ). */
   public final static long ONE_KB = 1024L;
 
@@ -108,27 +98,6 @@ public abstract class AbstractAction implements Action {
   public AbstractAction() {
     // Fill the symbol table with system properties
     _symbolTable.readSystemProperties();
-  }
-
-
-
-
-  /**
-   * Get the configuration for this application
-   * 
-   * @return The configuration object for this application
-   */
-  public static Configuration getConfiguration() {
-
-    if ( _config == null ) {
-      // Read in our properties
-      try {
-        _config = new PropertiesConfiguration( PROPERTY_FILE_NAME );
-      } catch ( final ConfigurationException e ) {
-        throw new IllegalArgumentException( e.getMessage() );
-      }
-    }
-    return _config;
   }
 
 
@@ -529,7 +498,7 @@ public abstract class AbstractAction implements Action {
     * @return the value currently set in that property
     */
   public static String getProperty( final String key ) {
-    return getConfiguration().getString( _env + "." + key );
+    return SystemPropertyUtil.getString( _env + "." + key );
   }
 
 
@@ -543,7 +512,7 @@ public abstract class AbstractAction implements Action {
    * @return the value currently set in that property
    */
   public static String getEncryptedProperty( final String key ) {
-    String rawValue = getConfiguration().getString( _env + "." + key );
+    String rawValue = SystemPropertyUtil.getString( _env + "." + key );
     if ( rawValue != null ) {
       try {
         return CipherUtil.decrypt( rawValue );

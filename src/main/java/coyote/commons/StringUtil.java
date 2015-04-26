@@ -15,7 +15,7 @@ import java.io.UnsupportedEncodingException;
 
 
 /**
- * Simply a set of usefult string utilities for this project.
+ * Simply a set of useful string utilities for this project.
  */
 public class StringUtil {
 
@@ -24,6 +24,50 @@ public class StringUtil {
 
   /** Sixteen-bit Unicode Transformation Format, The byte order specified by a mandatory initial byte-order mark (either order accepted on input, big-endian used on output) */
   public static final String UTF_16 = "UTF-16";
+
+
+
+
+  /**
+   * Checks if a string is not null, empty ("") and not only whitespace.
+   * 
+   * <p>This is a convenience wrapper around isBlank(String) to make code 
+   * slightly more readable.</p>
+   * 
+   * @param str the String to check, may be null
+   * 
+   * @return <code>true</code> if the String is not empty and not null and not
+   *         whitespace
+   * 
+   * @see #isBlank(String)
+   */
+  public static boolean isNotBlank( String str ) {
+    return !StringUtil.isBlank( str );
+  }
+
+
+
+
+  /**
+   * Checks if a string is not null, empty ("") and not only whitespace.
+   * 
+   * @param str the String to check, may be null
+   * 
+   * @return <code>true</code> if the String is not empty and not null and not
+   *         whitespace
+   */
+  public static boolean isBlank( String str ) {
+    int strLen;
+    if ( str == null || ( strLen = str.length() ) == 0 ) {
+      return true;
+    }
+    for ( int i = 0; i < strLen; i++ ) {
+      if ( ( Character.isWhitespace( str.charAt( i ) ) == false ) ) {
+        return false;
+      }
+    }
+    return true;
+  }
 
 
 
