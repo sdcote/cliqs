@@ -125,7 +125,7 @@ import coyote.commons.ByteUtil;
  * </ol>
  */
 public class BlowfishCipher extends AbstractCipher implements Cipher {
-  private static final String CIPHER_NAME = "Default";
+  private static final String CIPHER_NAME = "Blowfish";
 
   /**
    * Cipher initialization data.
