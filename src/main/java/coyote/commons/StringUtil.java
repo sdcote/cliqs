@@ -15,7 +15,7 @@ import java.io.UnsupportedEncodingException;
 
 
 /**
- * 
+ * Simply a set of usefult string utilities for this project.
  */
 public class StringUtil {
 

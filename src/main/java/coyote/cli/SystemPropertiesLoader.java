@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014 Stephan D. Cote' - All rights reserved.
+ * 
+ * This program and the accompanying materials are made available under the 
+ * terms of the MIT License which accompanies this distribution, and is 
+ * available at http://creativecommons.org/licenses/MIT/
+ *
+ * Contributors:
+ *   Stephan D. Cote 
+ *      - Initial API and implementation
+ */
 package coyote.cli;
 
 import java.io.File;
@@ -46,8 +57,21 @@ public class SystemPropertiesLoader {
 
 
   /**
+   * Load the property file with the given name into the system properties.
    * 
-   * @param name
+   * <p>The name is appended with '.properties' to come up with the full file 
+   * name. Therefore passing this the name of 'app' will result in a file named
+   * 'app.properties' being used.</p>
+   * 
+   * <p>this method will search for the named file in 4 locations, each 
+   * subsequent found file being used to augment and over write the properties 
+   * of previously loaded properties files:<ul>
+   * <li>currently set class path</li>
+   * <li>home directory of the user running the JVM</li>
+   * <li>directory specified by the {@code cfg.dir} system property</li>
+   * <li>current working directory</li></ul></p>
+   * 
+   * @param name root name of the file to search
    */
   public static void load( String name ) {
 
@@ -163,7 +187,7 @@ public class SystemPropertiesLoader {
    * 
    * @param str the String to check, may be null
    * 
-   * @return <code>true</code> if the String is not empty and not null and not
+   * @return {@code true} if the String is not empty and not null and not
    *         whitespace
    * 
    * @see #isBlank(String)
@@ -180,7 +204,7 @@ public class SystemPropertiesLoader {
    * 
    * @param str the String to check, may be null
    * 
-   * @return <code>true</code> if the String is not empty and not null and not
+   * @return {@code true} if the String is not empty and not null and not
    *         whitespace
    */
   public static boolean isBlank( String str ) {

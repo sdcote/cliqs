@@ -229,9 +229,10 @@ public abstract class BaseNCodec implements BinaryEncoder, BinaryDecoder {
 
 
   /**
-   * Tests a given byte array to see if it contains any characters within the alphabet or PAD.
+   * Tests a given byte array to see if it contains any characters within the 
+   * alphabet or PAD.
    *
-   * Intended for use in checking line-ending arrays
+   * <p>Intended for use in checking line-ending arrays.</p>
    *
    * @param arrayOctet byte array to test
    * 

@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014 Stephan D. Cote' - All rights reserved.
+ * 
+ * This program and the accompanying materials are made available under the 
+ * terms of the MIT License which accompanies this distribution, and is 
+ * available at http://creativecommons.org/licenses/MIT/
+ *
+ * Contributors:
+ *   Stephan D. Cote 
+ *      - Initial API and implementation
+ */
 package coyote.cli.template;
 
 import java.io.IOException;
@@ -14,14 +25,14 @@ import java.util.Hashtable;
  *
  * <p> If the token is preceded with a &quot;$&quot;, then the token is treated
  * as a key to be used to lookup an object in a symbol table. That object's
- * <code>toString</code> method is called and the returning value placed in the
+ * {@code toString} method is called and the returning value placed in the
  * position where the token was found. This is analogous to a variable lookup.
  * If the token is not found in the table or the symbols object returns a null
  * string, then the string &quot;null&quot; is returned.</p>
  *
  * <p>Tokens that are not preceded with a &quot;$&quot; are treated as class
  * tokens when encountered, the parser attempts to create a new instance if
- * that class, calling the new instances <code>toString</code> method after
+ * that class, calling the new instances {@code toString} method after
  * it's constructor. If the class is not found, a string value of
  * &quot;null&quot; is returned.</p>
  *

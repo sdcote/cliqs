@@ -13,8 +13,7 @@ import coyote.commons.StringUtil;
  * BASE32 characters.</p>
  * 
  * <p> The class can be parameterized in the following manner with various 
- * constructors:
- * <ul>
+ * constructors:<ul>
  * <li>Whether to use the "base32hex" variant instead of the default 
  * "base32".</li>
  * <li>Line length: Default 76. Line length that aren't multiples of 8 will 
@@ -26,7 +25,7 @@ import coyote.commons.StringUtil;
  * 
  * <p> This class is not thread-safe. Each thread should use its own instance.</p>
  * 
- * <p>The static final fields in theis calss are used for the original static 
+ * <p>The static final fields in these classes are used for the original static 
  * byte[] methods on Base32. The private member fields are used with the 
  * streaming approach, which requires some state be preserved between calls to 
  * the encode() and decode() methods.</p>
@@ -45,8 +44,9 @@ public class Base32 extends BaseNCodec {
   private static final byte[] CHUNK_SEPARATOR = { '\r', '\n' };
 
   /**
-   * This array is a lookup table that translates Unicode characters drawn from the "Base32 Alphabet" (as specified
-   * in Table 3 of RFC 4648) into their 5-bit positive integer equivalents. Characters that are not in the Base32
+   * This array is a lookup table that translates Unicode characters drawn from 
+   * the "Base32 Alphabet" (as specified in Table 3 of RFC 4648) into their 
+   * 5-bit positive integer equivalents. Characters that are not in the Base32
    * alphabet but fall within the bounds of the array are translated to -1.
    */
   private static final byte[] DECODE_TABLE = {
@@ -60,15 +60,18 @@ public class Base32 extends BaseNCodec {
   };
 
   /**
-   * This array is a lookup table that translates 5-bit positive integer index values into their "Base32 Alphabet"
-   * equivalents as specified in Table 3 of RFC 4648.
+   * This array is a lookup table that translates 5-bit positive integer index 
+   * values into their "Base32 Alphabet" equivalents as specified in Table 3 of 
+   * RFC 4648.
    */
   private static final byte[] ENCODE_TABLE = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '2', '3', '4', '5', '6', '7', };
 
   /**
-   * This array is a lookup table that translates Unicode characters drawn from the "Base32 |Hex Alphabet" (as
-   * specified in Table 3 of RFC 4648) into their 5-bit positive integer equivalents. Characters that are not in the
-   * Base32 Hex alphabet but fall within the bounds of the array are translated to -1.
+   * This array is a lookup table that translates Unicode characters drawn from 
+   * the "Base32 |Hex Alphabet" (as specified in Table 3 of RFC 4648) into 
+   * their 5-bit positive integer equivalents. Characters that are not in the
+   * Base32 Hex alphabet but fall within the bounds of the array are translated 
+   * to -1.
    */
   private static final byte[] HEX_DECODE_TABLE = {
       //  0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
@@ -81,8 +84,9 @@ public class Base32 extends BaseNCodec {
   };
 
   /**
-   * This array is a lookup table that translates 5-bit positive integer index values into their
-   * "Base32 Hex Alphabet" equivalents as specified in Table 3 of RFC 4648.
+   * This array is a lookup table that translates 5-bit positive integer index 
+   * values into their "Base32 Hex Alphabet" equivalents as specified in Table 
+   * 3 of RFC 4648.
    */
   private static final byte[] HEX_ENCODE_TABLE = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', };
 
@@ -90,8 +94,10 @@ public class Base32 extends BaseNCodec {
   private static final int MASK_5BITS = 0x1f;
 
   /**
-   * Convenience variable to help us determine when our buffer is going to run out of room and needs resizing.
-   * <code>decodeSize = {@link #BYTES_PER_ENCODED_BLOCK} - 1 + lineSeparator.length;</code>
+   * Convenience variable to help us determine when our buffer is going to run 
+   * out of room and needs resizing.
+   * 
+   * {@code decodeSize = {@link #BYTES_PER_ENCODED_BLOCK} - 1 + lineSeparator.length;}
    */
   private final int decodeSize;
 
@@ -101,8 +107,10 @@ public class Base32 extends BaseNCodec {
   private final byte[] decodeTable;
 
   /**
-   * Convenience variable to help us determine when our buffer is going to run out of room and needs resizing.
-   * <code>encodeSize = {@link #BYTES_PER_ENCODED_BLOCK} + lineSeparator.length;</code>
+   * Convenience variable to help us determine when our buffer is going to run 
+   * out of room and needs resizing.
+   * 
+   * {@code encodeSize = {@link #BYTES_PER_ENCODED_BLOCK} + lineSeparator.length;}
    */
   private final int encodeSize;
 
@@ -112,7 +120,8 @@ public class Base32 extends BaseNCodec {
   private final byte[] encodeTable;
 
   /**
-   * Line separator for encoding. Not used when decoding. Only used if lineLength &gt; 0.
+   * Line separator for encoding. Not used when decoding. Only used if 
+   * lineLength &gt; 0.
    */
   private final byte[] lineSeparator;
 
@@ -208,7 +217,8 @@ public class Base32 extends BaseNCodec {
    * @param lineSeparator Each line of encoded data will end with this sequence 
    * of bytes.
    * 
-   * @throws IllegalArgumentException The provided lineSeparator included some Base32 characters. That's not going to work!
+   * @throws IllegalArgumentException The provided lineSeparator included some 
+   *         Base32 characters. That's not going to work!
    */
   public Base32( final int lineLength, final byte[] lineSeparator ) {
     this( lineLength, lineSeparator, false, PAD_DEFAULT );
