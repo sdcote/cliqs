@@ -15,11 +15,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.FieldPosition;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -28,6 +23,7 @@ import coyote.cli.CLI;
 import coyote.cli.template.SymbolTable;
 import coyote.cli.template.Template;
 import coyote.commons.CipherUtil;
+import coyote.commons.StringUtil;
 import coyote.commons.SystemPropertyUtil;
 
 
@@ -47,11 +43,6 @@ public abstract class AbstractAction implements Action {
   /** Flag indicating debugging messages should be sent to the console */
   private static boolean DEBUG = false;
 
-  /** used to format dates into strings */
-  private static final DateFormat _DATETIME_FORMAT = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" );
-  private static final DateFormat _DATE_FORMAT = new SimpleDateFormat( "yyyy/MM/dd" );
-  private static final DateFormat _TIME_FORMAT = new SimpleDateFormat( "HH:mm:ss" );
-
   /** The format in which our output should be displayed. Text is the default.*/
   protected String _displayFormat = null;
 
@@ -61,23 +52,6 @@ public abstract class AbstractAction implements Action {
   public static final String SAAS_SCHEME = "saas.scheme";
   public static final String SAAS_USER = "saas.user";
   public static final String SAAS_PASS = "saas.pass";
-
-  public static final String LF = System.getProperty( "line.separator" );
-  static DecimalFormat MILLIS = new DecimalFormat( "000" );
-  protected static final DecimalFormat NUMBER_FORMAT = new DecimalFormat( "###,###,###,###,###" );
-  private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat( "#,###,##0.00" );
-
-  /** Represents 1 Kilo Byte ( 1024 ). */
-  public final static long ONE_KB = 1024L;
-
-  /** Represents 1 Mega Byte ( 1024^2 ). */
-  public final static long ONE_MB = ONE_KB * 1024L;
-
-  /** Represents 1 Giga Byte ( 1024^3 ). */
-  public final static long ONE_GB = ONE_MB * 1024L;
-
-  /** Represents 1 Tera Byte ( 1024^4 ). */
-  public final static long ONE_TB = ONE_GB * 1024L;
 
   /** This is what is used for or main output, not logging, but user data. */
   protected static PrintStream OUT = System.out;
@@ -189,7 +163,7 @@ public abstract class AbstractAction implements Action {
    */
   public void outputLine( Object data ) {
     OUT.print( data );
-    OUT.print( LF );
+    OUT.print( StringUtil.LINE_FEED );
     OUT.flush();
   }
 
@@ -253,139 +227,6 @@ public abstract class AbstractAction implements Action {
 
 
   /**
-   * Format the string using the default formatting for all actions.
-   * 
-   * @param date The date to format.
-   * 
-   * @return The formatted date string.
-   */
-  public static String formatDateTime( Date date ) {
-    if ( date == null )
-      return "null";
-    else
-      return _DATETIME_FORMAT.format( date );
-  }
-
-
-
-
-  /**
-   * Format the date only returning the date portion of the date  (i.e. no time representation).
-   * 
-   * @param date the date/time to format
-   * 
-   * @return only the date portion formatted
-   */
-  public static String formatDate( Date date ) {
-    if ( date == null )
-      return "null";
-    else
-      return _DATE_FORMAT.format( date );
-  }
-
-
-
-
-  /**
-   * Format the date returning only the time portion of the date (i.e. no month, day or year).
-   * 
-   * @param date the date/time to format
-   * 
-   * @return only the time portion formatted
-   */
-  public static String formatTime( Date date ) {
-    if ( date == null )
-      return "null";
-    else
-      return _TIME_FORMAT.format( date );
-  }
-
-
-
-
-  /**
-   * Get a formatted string representing the difference between the two times.
-   * 
-   * @param startDate Required start date
-   * @param endDate Optional end date; current time is assumed otherwise.
-   *  
-   * @return formatted string representing weeks, days, hours minutes and seconds.
-   */
-  public static String formatElapsed( Date startDate, Date endDate ) {
-    if ( startDate == null )
-      return "not started";
-
-    Date end = endDate;
-
-    if ( endDate == null )
-      end = new Date();
-
-    return formatElapsed( end.getTime() - startDate.getTime() );
-  }
-
-
-
-
-  /**
-   * Format the number consistently across action.
-   * 
-   * @param number the number to format
-   * 
-   * @return zero suppressed, comma separated number.
-   */
-  public static String formatNumber( long number ) {
-    return NUMBER_FORMAT.format( number );
-  }
-
-
-
-
-  public static String formatDecimal( double number ) {
-    return DECIMAL_FORMAT.format( number );
-  }
-
-
-
-
-  /**
-   * Formats the size as a most significant number of bytes.
-   * 
-   * @param size in bytes
-   * 
-   * @return the size formatted for display
-   */
-  public static String formatSizeBytes( final double size ) {
-    final StringBuffer buf = new StringBuffer( 16 );
-    String text;
-    double divider;
-
-    if ( size < ONE_KB ) {
-      text = "bytes";
-      divider = 1.0;
-    } else if ( size < ONE_MB ) {
-      text = "KB";
-      divider = ONE_KB;
-    } else if ( size < ONE_GB ) {
-      text = "MB";
-      divider = ONE_MB;
-    } else if ( size < ONE_TB ) {
-      text = "GB";
-      divider = ONE_GB;
-    } else {
-      text = "TB";
-      divider = ONE_TB;
-    }
-
-    final double d = ( (double)size ) / divider;
-    DECIMAL_FORMAT.format( d, buf, new FieldPosition( 0 ) ).append( ' ' ).append( text );
-
-    return buf.toString();
-  }
-
-
-
-
-  /**
    * Formats the given number as a most significant number of bytes.
    * 
    * @param number the number to format
@@ -394,80 +235,6 @@ public abstract class AbstractAction implements Action {
    */
   public static String formatSizeBytes( final Number number ) {
     return formatSizeBytes( number.doubleValue() );
-  }
-
-
-
-
-  /**
-   * Get a formatted string representing the difference between the two times.
-   * 
-   * @param millis number of elapsed milliseconds.
-   * 
-   * @return formatted string representing weeks, days, hours minutes and seconds.
-   */
-  public static String formatElapsed( long millis ) {
-    if ( millis < 0 || millis == Long.MAX_VALUE ) {
-      return "?";
-    }
-
-    long secondsInMilli = 1000;
-    long minutesInMilli = secondsInMilli * 60;
-    long hoursInMilli = minutesInMilli * 60;
-    long daysInMilli = hoursInMilli * 24;
-    long weeksInMilli = daysInMilli * 7;
-
-    long elapsedWeeks = millis / weeksInMilli;
-    millis = millis % weeksInMilli;
-
-    long elapsedDays = millis / daysInMilli;
-    millis = millis % daysInMilli;
-
-    long elapsedHours = millis / hoursInMilli;
-    millis = millis % hoursInMilli;
-
-    long elapsedMinutes = millis / minutesInMilli;
-    millis = millis % minutesInMilli;
-
-    long elapsedSeconds = millis / secondsInMilli;
-    millis = millis % secondsInMilli;
-
-    StringBuilder b = new StringBuilder();
-
-    if ( elapsedWeeks > 0 ) {
-      b.append( elapsedWeeks );
-      if ( elapsedWeeks > 1 )
-        b.append( " wks " );
-      else
-        b.append( " wk " );
-    }
-    if ( elapsedDays > 0 ) {
-      b.append( elapsedDays );
-      if ( elapsedDays > 1 )
-        b.append( " days " );
-      else
-        b.append( " day " );
-
-    }
-    if ( elapsedHours > 0 ) {
-      b.append( elapsedHours );
-      if ( elapsedHours > 1 )
-        b.append( " hrs " );
-      else
-        b.append( " hr " );
-    }
-    if ( elapsedMinutes > 0 ) {
-      b.append( elapsedMinutes );
-      b.append( " min " );
-    }
-    b.append( elapsedSeconds );
-    if ( millis > 0 ) {
-      b.append( "." );
-      b.append( MILLIS.format( millis ) );
-    }
-    b.append( " sec" );
-
-    return b.toString();
   }
 
 

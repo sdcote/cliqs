@@ -25,6 +25,9 @@ public class StringUtil {
   /** Sixteen-bit Unicode Transformation Format, The byte order specified by a mandatory initial byte-order mark (either order accepted on input, big-endian used on output) */
   public static final String UTF_16 = "UTF-16";
 
+  /** Platform specific line separator (default = CRLF) */
+  public static final String LINE_FEED = System.getProperty( "line.separator", "\r\n" );
+
 
 
 
