@@ -3,7 +3,6 @@ package coyote.commons.codec;
 import coyote.commons.StringUtil;
 
 
-
 /**
  * Provides Base32 encoding and decoding as defined by 
  * <a href="http://www.ietf.org/rfc/rfc4648.txt">RFC 4648</a>.

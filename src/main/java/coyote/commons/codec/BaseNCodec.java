@@ -5,8 +5,6 @@ import java.util.Arrays;
 import coyote.commons.StringUtil;
 
 
-
-
 /**
  * Abstract superclass for Base-N encoders and decoders.
  */

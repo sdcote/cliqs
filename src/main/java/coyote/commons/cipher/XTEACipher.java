@@ -31,50 +31,6 @@ public class XTEACipher extends AbstractCipher implements Cipher {
   private static final String UTF16 = "UTF-16";
   private static final String CIPHER_NAME = "XTEA";
 
-  private int[] subKeys = null;
-
-
-
-
-  /**
-   * Encrypt one block of data with XTEA algorithm.
-   * 
-   * @param data the byte array from which to read the clear data.
-   * @param offset offset in the array to retrieve the next block to encrypt. 
-   * @param subkeys The subkeys to use in the encryption.
-   * 
-   * @return a block of enciphered data.
-   */
-  public static byte[] encrypt( final byte[] data, int offset, final int[] subkeys ) {
-    // Pack bytes into integers
-    int v0 = ( ( data[offset++] ) << 24 ) | ( ( data[offset++] & 0xFF ) << 16 ) | ( ( data[offset++] & 0xFF ) << 8 ) | ( ( data[offset++] & 0xFF ) );
-    int v1 = ( ( data[offset++] ) << 24 ) | ( ( data[offset++] & 0xFF ) << 16 ) | ( ( data[offset++] & 0xFF ) << 8 ) | ( ( data[offset] & 0xFF ) );
-
-    int n = XTEACipher.ROUNDS, sum;
-
-    sum = 0;
-    while ( n-- > 0 ) {
-      v0 += ( ( v1 << 4 ^ v1 >>> 5 ) + v1 ) ^ ( sum + subkeys[sum & 3] );
-      sum += XTEACipher.DELTA;
-      v1 += ( ( v0 << 4 ^ v0 >>> 5 ) + v0 ) ^ ( sum + subkeys[sum >>> 11 & 3] );
-    }
-
-    // Unpack and return
-    int outOffset = 0;
-    final byte[] out = new byte[XTEACipher.BLOCK_SIZE];
-    out[outOffset++] = (byte)( v0 >>> 24 );
-    out[outOffset++] = (byte)( v0 >>> 16 );
-    out[outOffset++] = (byte)( v0 >>> 8 );
-    out[outOffset++] = (byte)( v0 );
-
-    out[outOffset++] = (byte)( v1 >>> 24 );
-    out[outOffset++] = (byte)( v1 >>> 16 );
-    out[outOffset++] = (byte)( v1 >>> 8 );
-    out[outOffset] = (byte)( v1 );
-
-    return out;
-  }
-
 
 
 
@@ -98,9 +54,9 @@ public class XTEACipher extends AbstractCipher implements Cipher {
     sum = XTEACipher.D_SUM;
 
     while ( n-- > 0 ) {
-      v1 -= ( ( v0 << 4 ^ v0 >>> 5 ) + v0 ) ^ ( sum + subkeys[sum >>> 11 & 3] );
+      v1 -= ( ( ( v0 << 4 ) ^ ( v0 >>> 5 ) ) + v0 ) ^ ( sum + subkeys[( sum >>> 11 ) & 3] );
       sum -= XTEACipher.DELTA;
-      v0 -= ( ( v1 << 4 ^ v1 >>> 5 ) + v1 ) ^ ( sum + subkeys[sum & 3] );
+      v0 -= ( ( ( v1 << 4 ) ^ ( v1 >>> 5 ) ) + v1 ) ^ ( sum + subkeys[sum & 3] );
     }
 
     // Unpack and return
@@ -117,29 +73,6 @@ public class XTEACipher extends AbstractCipher implements Cipher {
     out[outOffset] = (byte)( v1 );
 
     return out;
-  }
-
-
-
-
-  /**
-   * Decrypt the given encrypted data using the given key.
-   * 
-   * <p>This method will decrypt the given data and parse the resulting 
-   * decrypted bytes into a string assuming UTF16 encoding.
-   * 
-   * @param data The encrypted data.
-   * @param key The key to use during decryption.
-   * 
-   * @return The string resulting from the decrypted bytes.
-   */
-  public static String decryptString( final byte[] data, final String key ) {
-    try {
-      return new String( XTEACipher.decrypt( data, key ), XTEACipher.UTF16 );
-    } catch ( final UnsupportedEncodingException e ) {
-      e.printStackTrace();
-    }
-    return new String( data );
   }
 
 
@@ -192,18 +125,100 @@ public class XTEACipher extends AbstractCipher implements Cipher {
 
 
   /**
-   * @see coyote.commons.security.Cipher#decrypt(byte[])
+   * Decrypt the given encrypted data using the given key.
+   * 
+   * <p>This method will decrypt the given data and parse the resulting 
+   * decrypted bytes into a string assuming UTF16 encoding.
+   * 
+   * @param data The encrypted data.
+   * @param key The key to use during decryption.
+   * 
+   * @return The string resulting from the decrypted bytes.
    */
-  @Override
-  public byte[] decrypt( byte[] data ) {
-    byte[] retval = new byte[data.length];
+  public static String decryptString( final byte[] data, final String key ) {
+    try {
+      return new String( XTEACipher.decrypt( data, key ), XTEACipher.UTF16 );
+    } catch ( final UnsupportedEncodingException e ) {
+      e.printStackTrace();
+    }
+    return new String( data );
+  }
 
-    for ( int x = 0; x < data.length; x += XTEACipher.BLOCK_SIZE ) {
-      final byte[] block = XTEACipher.decrypt( data, x, subKeys );
-      System.arraycopy( block, 0, retval, x, block.length );
+
+
+
+  /**
+   * Encrypt one block of data with XTEA algorithm.
+   * 
+   * @param data the byte array from which to read the clear data.
+   * @param offset offset in the array to retrieve the next block to encrypt. 
+   * @param subkeys The subkeys to use in the encryption.
+   * 
+   * @return a block of enciphered data.
+   */
+  public static byte[] encrypt( final byte[] data, int offset, final int[] subkeys ) {
+    // Pack bytes into integers
+    int v0 = ( ( data[offset++] ) << 24 ) | ( ( data[offset++] & 0xFF ) << 16 ) | ( ( data[offset++] & 0xFF ) << 8 ) | ( ( data[offset++] & 0xFF ) );
+    int v1 = ( ( data[offset++] ) << 24 ) | ( ( data[offset++] & 0xFF ) << 16 ) | ( ( data[offset++] & 0xFF ) << 8 ) | ( ( data[offset] & 0xFF ) );
+
+    int n = XTEACipher.ROUNDS, sum;
+
+    sum = 0;
+    while ( n-- > 0 ) {
+      v0 += ( ( ( v1 << 4 ) ^ ( v1 >>> 5 ) ) + v1 ) ^ ( sum + subkeys[sum & 3] );
+      sum += XTEACipher.DELTA;
+      v1 += ( ( ( v0 << 4 ) ^ ( v0 >>> 5 ) ) + v0 ) ^ ( sum + subkeys[( sum >>> 11 ) & 3] );
     }
 
-    return AbstractCipher.trim( retval );
+    // Unpack and return
+    int outOffset = 0;
+    final byte[] out = new byte[XTEACipher.BLOCK_SIZE];
+    out[outOffset++] = (byte)( v0 >>> 24 );
+    out[outOffset++] = (byte)( v0 >>> 16 );
+    out[outOffset++] = (byte)( v0 >>> 8 );
+    out[outOffset++] = (byte)( v0 );
+
+    out[outOffset++] = (byte)( v1 >>> 24 );
+    out[outOffset++] = (byte)( v1 >>> 16 );
+    out[outOffset++] = (byte)( v1 >>> 8 );
+    out[outOffset] = (byte)( v1 );
+
+    return out;
+  }
+
+
+
+
+  /**
+   * Returns the encrypted bytes for the given string.
+   * 
+   * <p>First, the key is converted to UTF-16 encoding and passed through the
+   * Virtual Machines MD5 message digest and the first 16 bytes of the digest 
+   * are used to represent the key.<p>
+   *  
+   * <p>Next the data is padded to 8-byte blocks of data using a PKCS5 DES CBC 
+   * encryption padding scheme described in section 1.1 of RFC-1423.</p>
+   * 
+   * <p>Finally, the resulting blocked data is run through 32-round Feistel 
+   * cipher which uses operations from mixed (orthogonal) algebraic groups - 
+   * XORs and additions in this case. It encrypts 64 data bits at a time using 
+   * the key.</p>
+   * 
+   * @param bytes The data to encipher.
+   * @param key The key to use in the generation of the enciphered text.
+   * 
+   * @return The encrypted text as a byte array.
+   */
+  public static byte[] encrypt( final byte[] bytes, final String key ) {
+
+    final XTEACipher cipher = new XTEACipher();
+
+    // initialize with the key string
+    cipher.init( XTEACipher.getKeyBytes( key ) );
+
+    // Have the cipher encrypt the data
+    return cipher.encrypt( bytes );
+
   }
 
 
@@ -234,60 +249,16 @@ public class XTEACipher extends AbstractCipher implements Cipher {
 
 
   /**
-   * Returns the encrypted bytes for the given string.
+   * Generate XTEA subkeys for the cipher alogrithm.
    * 
-   * <p>First, the key is converted to UTF-16 encoding and passed through the
-   * Virtual Machines MD5 message digest and the first 16 bytes of the digest 
-   * are used to represent the key.<p>
-   *  
-   * <p>Next the data is padded to 8-byte blocks of data using a PKCS5 DES CBC 
-   * encryption padding scheme described in section 1.1 of RFC-1423.</p>
+   * @param key the key to use as the seed for subkey generation.
    * 
-   * <p>Finally, the resulting blocked data is run through 32-round Feistel 
-   * cipher which uses operations from mixed (orthogonal) algebraic groups - 
-   * XORs and additions in this case. It encrypts 64 data bits at a time using 
-   * the key.</p>
-   * 
-   * @param bytes The data to encipher.
-   * @param key The key to use in the generation of the enciphered text.
-   * 
-   * @return The encrypted text as a byte array.
+   * @return a 4-element integer array containing the generated keys. 
    */
-  public static byte[] encrypt( byte[] bytes, final String key ) {
-
-    XTEACipher cipher = new XTEACipher();
-
-    // initialize with the key string
-    cipher.init( XTEACipher.getKeyBytes( key ) );
-
-    // Have the cipher encrypt the data
-    return cipher.encrypt( bytes );
-
-  }
-
-
-
-
-  /**
-   * Encrypt the given data.
-   * 
-   * <p>This instance MUST be initialized prior to making this call.</p>
-   * 
-   * @see coyote.commons.security.Cipher#encrypt(byte[])
-   */
-  @Override
-  public byte[] encrypt( byte[] bytes ) {
-
-    // pad the data using RFC-1423 scheme
-    byte[] data = AbstractCipher.pad( bytes );
-
-    // create our return value
-    final byte[] retval = new byte[data.length];
-
-    // encrypt the data
-    for ( int x = 0; x < bytes.length; x += XTEACipher.BLOCK_SIZE ) {
-      final byte[] block = XTEACipher.encrypt( data, x, subKeys );
-      System.arraycopy( block, 0, retval, x, block.length );
+  private static int[] generateSubKeys( final byte[] key ) {
+    final int[] retval = new int[4];
+    for ( int off = 0, i = 0; i < 4; i++ ) {
+      retval[i] = ( ( key[off++] & 0xFF ) << 24 ) | ( ( key[off++] & 0xFF ) << 16 ) | ( ( key[off++] & 0xFF ) << 8 ) | ( ( key[off++] & 0xFF ) );
     }
     return retval;
   }
@@ -313,7 +284,7 @@ public class XTEACipher extends AbstractCipher implements Cipher {
       final byte[] result = md.digest();
       for ( int x = 0; x < retval.length; x++ ) {
         retval[x] = result[x];
-        if ( x + 1 > result.length ) {
+        if ( ( x + 1 ) > result.length ) {
           break;
         }
       }
@@ -323,67 +294,6 @@ public class XTEACipher extends AbstractCipher implements Cipher {
       e.printStackTrace();
     }
     return retval;
-  }
-
-
-
-
-  /**
-   * Generate XTEA subkeys for the cipher alogrithm.
-   * 
-   * @param key the key to use as the seed for subkey generation.
-   * 
-   * @return a 4-element integer array containing the generated keys. 
-   */
-  private static int[] generateSubKeys( final byte[] key ) {
-    final int[] retval = new int[4];
-    for ( int off = 0, i = 0; i < 4; i++ ) {
-      retval[i] = ( ( key[off++] & 0xFF ) << 24 ) | ( ( key[off++] & 0xFF ) << 16 ) | ( ( key[off++] & 0xFF ) << 8 ) | ( ( key[off++] & 0xFF ) );
-    }
-    return retval;
-  }
-
-
-
-
-  public XTEACipher() {
-
-  }
-
-
-
-
-  /**
-   * @see coyote.commons.security.Cipher#getName()
-   */
-  @Override
-  public String getName() {
-    return XTEACipher.CIPHER_NAME;
-  }
-
-
-
-
-  /**
-   * <p>The most common method for initializing this cipher is to pick a string 
-   * and an encoding and convert the string to bytes using that encoding.</p>
-   * 
-   * @see coyote.commons.security.Cipher#init(byte[])
-   */
-  @Override
-  public void init( byte[] key ) {
-    subKeys = XTEACipher.generateSubKeys( key );
-  }
-
-
-
-
-  /**
-   * @see coyote.commons.security.Cipher#getBlockSize()
-   */
-  @Override
-  public int getBlockSize() {
-    return XTEACipher.BLOCK_SIZE;
   }
 
 
@@ -479,6 +389,82 @@ public class XTEACipher extends AbstractCipher implements Cipher {
 
   }
 
+  private int[] subKeys = null;
+
+
+
+
+  public XTEACipher() {
+
+  }
+
+
+
+
+  /**
+   * @see coyote.commons.security.Cipher#decrypt(byte[])
+   */
+  @Override
+  public byte[] decrypt( final byte[] data ) {
+    final byte[] retval = new byte[data.length];
+
+    for ( int x = 0; x < data.length; x += XTEACipher.BLOCK_SIZE ) {
+      final byte[] block = XTEACipher.decrypt( data, x, subKeys );
+      System.arraycopy( block, 0, retval, x, block.length );
+    }
+
+    return AbstractCipher.trim( retval );
+  }
+
+
+
+
+  /**
+   * Encrypt the given data.
+   * 
+   * <p>This instance MUST be initialized prior to making this call.</p>
+   * 
+   * @see coyote.commons.security.Cipher#encrypt(byte[])
+   */
+  @Override
+  public byte[] encrypt( final byte[] bytes ) {
+
+    // pad the data using RFC-1423 scheme
+    final byte[] data = AbstractCipher.pad( bytes );
+
+    // create our return value
+    final byte[] retval = new byte[data.length];
+
+    // encrypt the data
+    for ( int x = 0; x < bytes.length; x += XTEACipher.BLOCK_SIZE ) {
+      final byte[] block = XTEACipher.encrypt( data, x, subKeys );
+      System.arraycopy( block, 0, retval, x, block.length );
+    }
+    return retval;
+  }
+
+
+
+
+  /**
+   * @see coyote.commons.security.Cipher#getBlockSize()
+   */
+  @Override
+  public int getBlockSize() {
+    return XTEACipher.BLOCK_SIZE;
+  }
+
+
+
+
+  /**
+   * @see coyote.commons.security.Cipher#getName()
+   */
+  @Override
+  public String getName() {
+    return XTEACipher.CIPHER_NAME;
+  }
+
 
 
 
@@ -488,6 +474,20 @@ public class XTEACipher extends AbstractCipher implements Cipher {
   @Override
   public Cipher getNewInstance() {
     return new XTEACipher();
+  }
+
+
+
+
+  /**
+   * <p>The most common method for initializing this cipher is to pick a string 
+   * and an encoding and convert the string to bytes using that encoding.</p>
+   * 
+   * @see coyote.commons.security.Cipher#init(byte[])
+   */
+  @Override
+  public void init( final byte[] key ) {
+    subKeys = XTEACipher.generateSubKeys( key );
   }
 
 }

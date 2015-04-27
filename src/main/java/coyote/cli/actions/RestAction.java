@@ -114,7 +114,7 @@ public abstract class RestAction extends AbstractAction {
    * @return a dataframe containing the results
    * @throws IOException 
    */
-  protected Response execute( HttpHost target, final HttpRequest request ) throws IOException {
+  protected Response execute( final HttpHost target, final HttpRequest request ) throws IOException {
     final Response response = new Response( request );
 
     // Set the content type to JSON

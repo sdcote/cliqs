@@ -85,6 +85,17 @@ public class NullCipher extends AbstractCipher implements Cipher {
 
 
   /**
+   * @see coyote.commons.cipher.Cipher#getNewInstance()
+   */
+  @Override
+  public Cipher getNewInstance() {
+    return new NullCipher();
+  }
+
+
+
+
+  /**
    * Initialize the algorithm with a key to be used for en/de-cryption.
    * 
    * @param key The key to use for all operations.
@@ -92,17 +103,6 @@ public class NullCipher extends AbstractCipher implements Cipher {
   @Override
   public void init( final byte[] key ) {
     // don't care
-  }
-
-
-
-
-  /**
-   * @see coyote.commons.cipher.Cipher#getNewInstance()
-   */
-  @Override
-  public Cipher getNewInstance() {
-    return new NullCipher();
   }
 
 }

@@ -37,34 +37,13 @@ public class EncryptedString extends AbstractAction {
    */
   @Override
   @SuppressWarnings("static-access")
-  public void buildOptions( Options o ) {
+  public void buildOptions( final Options o ) {
 
     // If there is not an ID option, create one for the CLI to use when
     // parsing command arguments
     if ( !o.hasOption( OPT_TOKEN ) ) {
       o.addOption( OptionBuilder.hasArg().isRequired( false ).withArgName( "text" ).withType( String.class ).withDescription( "The string token to parse or process." ).create( OPT_TOKEN ) );
     }
-  }
-
-
-
-
-  /**
-   * @see coyote.cli.actions.AbstractAction#getHelp()
-   */
-  @Override
-  public String getHelp() {
-    StringBuffer b = new StringBuffer();
-    b.append( "Encrypt a token for the properties file." );
-    return b.toString();
-  }
-
-
-
-
-  @Override
-  public void validate() throws ActionException {
-    token = getCommandLineValue( OPT_TOKEN );
   }
 
 
@@ -80,11 +59,32 @@ public class EncryptedString extends AbstractAction {
     } else {
       try {
         cipherText = CipherUtil.encrypt( token );
-      } catch ( Exception e ) {
+      } catch ( final Exception e ) {
         error( e );
       }
     }
     outputLine( "Token '" + token + "' encrypts to '" + cipherText + "'" );
+  }
+
+
+
+
+  /**
+   * @see coyote.cli.actions.AbstractAction#getHelp()
+   */
+  @Override
+  public String getHelp() {
+    final StringBuffer b = new StringBuffer();
+    b.append( "Encrypt a token for the properties file." );
+    return b.toString();
+  }
+
+
+
+
+  @Override
+  public void validate() throws ActionException {
+    token = getCommandLineValue( OPT_TOKEN );
   }
 
 }

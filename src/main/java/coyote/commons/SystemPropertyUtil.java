@@ -48,78 +48,35 @@ public class SystemPropertyUtil {
 
 
   /**
-   * Load the property file with the given name into the system properties.
+   * Return the configuration path set in the system properties.
    * 
-   * <p>The name is appended with '.properties' to come up with the full file 
-   * name. Therefore passing this the name of 'app' will result in a file named
-   * 'app.properties' being used.</p>
-   * 
-   * <p>This method will search for the named file in 4 locations, each 
-   * subsequent found file being used to augment and over write the properties 
-   * of previously loaded properties files:<ol>
-   * <li>currently set class path</li>
-   * <li>home directory of the user running the JVM</li>
-   * <li>directory specified by the {@code cfg.dir} system property</li>
-   * <li>current working directory</li></ol></p>
-   * 
-   * @param name root name of the file to search
+   * @return the path to the configuration property
    */
-  public static void load( String name ) {
+  public static String getConfigPath() {
+    // Check for ending file separator and remove it if found
+    String retval = System.getProperty( CONFIG_DIR );
+    if ( retval == null ) {
+      LOG.debug( String.format( "No configuration override path found in '%s' system property", CONFIG_DIR ) );
+      return "";
+    }
+    retval = retval.trim();
+    if ( retval.endsWith( File.separator ) ) {
+      retval = retval.substring( 0, retval.lastIndexOf( File.separator ) );
+    }
 
-    // Start with loading the property file from the classpath
-    loadPropertiesFromClasspath( name );
-
-    // then load from the user's home directory
-    loadPropertiesIntoSystem( name, false, System.getProperty( "user.home" ) );
-
-    // Load specific property files from the configuration directory which
-    // over-rides those properties previously loaded
-    loadPropertiesIntoSystem( name, false, getConfigPath() );
-
-    // Next load specific property files from the current working directory
-    loadPropertiesIntoSystem( name, false, System.getProperty( "user.dir" ) );
-
-    // Load the Java proxy authenticator if system properties contained the
-    // necessary data
-    installProxyAuthenticatorIfNeeded();
+    return retval;
   }
 
 
 
 
-  private static void loadPropertiesFromClasspath( String name ) {
-    Properties props = new Properties();
-    String resourcename = name + ".properties";
-    try {
-      props.load( SystemPropertyUtil.class.getClassLoader().getResourceAsStream( resourcename ) );
-      LOG.debug( "Loading {} properties from classpath resource '{}'", props.size(), resourcename );
-      System.getProperties().putAll( props );
-    } catch ( Exception e ) {
-      LOG.debug( "Could not find properties file named '{}' on classpath", resourcename );
-    }
-
-  }
-
-
-
-
-  private static void loadPropertiesIntoSystem( String fileName, boolean errIfMissing, String pathName ) {
-    if ( isNotBlank( pathName ) ) {
-      String filename = pathName + File.separator + fileName + ".properties";
-      LOG.debug( String.format( "Trying to load properties from %s into system", filename ) );
-      Properties props = new Properties();
-      try {
-        props.load( new FileInputStream( filename ) );
-        LOG.debug( "Loading {} properties from '{}'", props.size(), filename );
-        System.getProperties().putAll( props );
-      } catch ( IOException e ) {
-        String msg = String.format( "Failed to read from %s", filename );
-        LOG.debug( String.format( "%s - Reason: %s", msg, e.getMessage() ) );
-        if ( errIfMissing ) {
-          throw new IllegalStateException( msg, e );
-        }
-      }
-    }
+  /**
+   * @param key
+   * 
+   * @return the system property with the given key, or its default if it is set.
+   */
+  public static String getString( final String key ) {
+    return System.getProperties().getProperty( key );
   }
 
 
@@ -149,22 +106,24 @@ public class SystemPropertyUtil {
 
 
   /**
-   * Return the configuration path set in the system properties.
+   * Checks if a string is not null, empty ("") and not only whitespace.
    * 
-   * @return the path to the configuration property
+   * @param str the String to check, may be null
+   * 
+   * @return {@code true} if the String is not empty and not null and not
+   *         whitespace
    */
-  public static String getConfigPath() {
-    // Check for ending file separator and remove it if found
-    String retval = System.getProperty( CONFIG_DIR );
-    if ( retval == null ) {
-      LOG.debug( String.format( "No configuration override path found in '%s' system property", CONFIG_DIR ) );
-      return "";
+  public static boolean isBlank( final String str ) {
+    int strLen;
+    if ( ( str == null ) || ( ( strLen = str.length() ) == 0 ) ) {
+      return true;
     }
-    retval = retval.trim();
-    if ( retval.endsWith( File.separator ) )
-      retval = retval.substring( 0, retval.lastIndexOf( File.separator ) );
-
-    return retval;
+    for ( int i = 0; i < strLen; i++ ) {
+      if ( ( Character.isWhitespace( str.charAt( i ) ) == false ) ) {
+        return false;
+      }
+    }
+    return true;
   }
 
 
@@ -183,7 +142,7 @@ public class SystemPropertyUtil {
    * 
    * @see #isBlank(String)
    */
-  public static boolean isNotBlank( String str ) {
+  public static boolean isNotBlank( final String str ) {
     return !isBlank( str );
   }
 
@@ -191,24 +150,78 @@ public class SystemPropertyUtil {
 
 
   /**
-   * Checks if a string is not null, empty ("") and not only whitespace.
+   * Load the property file with the given name into the system properties.
    * 
-   * @param str the String to check, may be null
+   * <p>The name is appended with '.properties' to come up with the full file 
+   * name. Therefore passing this the name of 'app' will result in a file named
+   * 'app.properties' being used.</p>
    * 
-   * @return {@code true} if the String is not empty and not null and not
-   *         whitespace
+   * <p>This method will search for the named file in 4 locations, each 
+   * subsequent found file being used to augment and over write the properties 
+   * of previously loaded properties files:<ol>
+   * <li>currently set class path</li>
+   * <li>home directory of the user running the JVM</li>
+   * <li>directory specified by the {@code cfg.dir} system property</li>
+   * <li>current working directory</li></ol></p>
+   * 
+   * @param name root name of the file to search
    */
-  public static boolean isBlank( String str ) {
-    int strLen;
-    if ( str == null || ( strLen = str.length() ) == 0 ) {
-      return true;
+  public static void load( final String name ) {
+
+    // Start with loading the property file from the classpath
+    loadPropertiesFromClasspath( name );
+
+    // then load from the user's home directory
+    loadPropertiesIntoSystem( name, false, System.getProperty( "user.home" ) );
+
+    // Load specific property files from the configuration directory which
+    // over-rides those properties previously loaded
+    loadPropertiesIntoSystem( name, false, getConfigPath() );
+
+    // Next load specific property files from the current working directory
+    loadPropertiesIntoSystem( name, false, System.getProperty( "user.dir" ) );
+
+    // Load the Java proxy authenticator if system properties contained the
+    // necessary data
+    installProxyAuthenticatorIfNeeded();
+  }
+
+
+
+
+  private static void loadPropertiesFromClasspath( final String name ) {
+    final Properties props = new Properties();
+    final String resourcename = name + ".properties";
+    try {
+      props.load( SystemPropertyUtil.class.getClassLoader().getResourceAsStream( resourcename ) );
+      LOG.debug( "Loading {} properties from classpath resource '{}'", props.size(), resourcename );
+      System.getProperties().putAll( props );
+    } catch ( final Exception e ) {
+      LOG.debug( "Could not find properties file named '{}' on classpath", resourcename );
     }
-    for ( int i = 0; i < strLen; i++ ) {
-      if ( ( Character.isWhitespace( str.charAt( i ) ) == false ) ) {
-        return false;
+
+  }
+
+
+
+
+  private static void loadPropertiesIntoSystem( final String fileName, final boolean errIfMissing, final String pathName ) {
+    if ( isNotBlank( pathName ) ) {
+      final String filename = pathName + File.separator + fileName + ".properties";
+      LOG.debug( String.format( "Trying to load properties from %s into system", filename ) );
+      final Properties props = new Properties();
+      try {
+        props.load( new FileInputStream( filename ) );
+        LOG.debug( "Loading {} properties from '{}'", props.size(), filename );
+        System.getProperties().putAll( props );
+      } catch ( final IOException e ) {
+        final String msg = String.format( "Failed to read from %s", filename );
+        LOG.debug( String.format( "%s - Reason: %s", msg, e.getMessage() ) );
+        if ( errIfMissing ) {
+          throw new IllegalStateException( msg, e );
+        }
       }
     }
-    return true;
   }
 
 
@@ -223,7 +236,7 @@ public class SystemPropertyUtil {
    * @param name the name of the property to set
    * @param value the value of the property to set
    */
-  public static void setProperty( String name, String value ) {
+  public static void setProperty( final String name, final String value ) {
     if ( name != null ) {
       if ( value != null ) {
         System.getProperties().setProperty( name, value );
@@ -231,18 +244,6 @@ public class SystemPropertyUtil {
         System.getProperties().remove( name );
       }
     }
-  }
-
-
-
-
-  /**
-   * @param key
-   * 
-   * @return the system property with the given key, or its default if it is set.
-   */
-  public static String getString( String key ) {
-    return System.getProperties().getProperty( key );
   }
 
 }

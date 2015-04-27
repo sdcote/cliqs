@@ -30,9 +30,6 @@ import coyote.commons.SystemPropertyUtil;
 public abstract class AbstractAction implements Action {
   private static final String OPT_FMT = "fmt";
   private static final String FMT_TXT = "txt";
-  private static final String FMT_CSV = "csv";
-  private static final String FMT_TAB = "tab";
-
   /** The database environment to use */
   private static String _env = "DEV";
 
@@ -61,247 +58,19 @@ public abstract class AbstractAction implements Action {
 
 
 
-  public AbstractAction() {
-    // Fill the symbol table with system properties
-    _symbolTable.readSystemProperties();
-  }
-
-
-
-
-  /**
-   * This sets the destination of our output.
-   * 
-   * <p>This method uses template processing to perform substitutions based 
-   * on the currently set symbol table. This table contains all the system 
-   * properties and several common command line arguments using the name of 
-   * the argument name as the symbol and the argument itself as the value.</p>
-   * 
-   * <p>This is expected to be a filename, and this method will perform 
-   * processing necessary to ensure that it is valid and writable before 
-   * continuing. If not, it will exit with an appropriate message.</p>
-   * 
-   * <p>If the filename is null or empty, this method will use STDOUT of output
-   * in a manner similar to {@code System.out}. In fact, it is 
-   * expected most output will be sent to the console (STDOUT) and not a 
-   * file.</p>
-   * 
-   * @param filename The name of the file to sent output.
-   */
-  public void setOutput( String filename ) {
-    debug( "Setting output to " + filename );
-    if ( filename != null && filename.trim().length() > 0 ) {
-
-      // Create a template using our current symbol table
-      Template tmplt = new Template( filename, _symbolTable );
-
-      // parse and replace
-      String fname = tmplt.toString();
-
-      File file = new File( fname );
-
-      if ( file.exists() ) {
-        if ( file.isDirectory() ) {
-          exit( "File '" + file + "' exists but is a directory", 2 );
-        }
-        if ( file.canWrite() == false ) {
-          exit( "File '" + file + "' exists but cannot be written", 2 );
-        }
-        debug( "Over-writing existing file '" + file + "'" );
-      } else {
-        File parent = file.getParentFile();
-        if ( parent != null && parent.exists() == false ) {
-          if ( parent.mkdirs() == false ) {
-            exit( "File '" + file + "' could not be created", 2 );
-          }
-        }
+  /** Append a right-aligned and zero-padded numeric value to a `StringBuilder`. */
+  static private void append( final StringBuilder tgt, final String pfx, final int dgt, final long val ) {
+    tgt.append( pfx );
+    if ( dgt > 1 ) {
+      int pad = ( dgt - 1 );
+      for ( long xa = val; ( xa > 9 ) && ( pad > 0 ); xa /= 10 ) {
+        pad--;
       }
-
-      try {
-        OUT = new PrintStream( file );
-      } catch ( FileNotFoundException e ) {
-        // Should not happen since we performed checks above
-        exit( "Could not send output to file '" + file.getName() + "' (" + file.getAbsolutePath() + ") reason:" + e.getMessage(), 2 );
-      }
-
-    } // filename not blank
-
-  }
-
-
-
-
-  /**
-   * This sends data to the chosen (or default) output stream.
-   * 
-   * <p>This essentially performs a {@code print(Object)} on the output stream,
-   * so line feeds and returns should be embedded in the data if they are 
-   * desired.</p>
-   * 
-   * <p>This method is a convenience wrapper around {@code OUT.print(data)}. 
-   * For slightly more control over output, the {@code OUT} attribute can be 
-   * used directly. It is a {@link PrintWriter} connected to the desired output
-   * stream.</p>
-   * 
-   * <p>The output flushes which each call to this method.</p> 
-   * 
-   * @param data the data to send to the previously selected output stream.
-   */
-  public void output( Object data ) {
-    OUT.print( data );
-    OUT.flush();
-  }
-
-
-
-
-  /**
-   * Same as {@link #output(Object)} except this adds a line terminator after 
-   * the the given data.
-   * 
-   * @param data the data to send to the previously selected output stream.
-   */
-  public void outputLine( Object data ) {
-    OUT.print( data );
-    OUT.print( StringUtil.LINE_FEED );
-    OUT.flush();
-  }
-
-
-
-
-  public static String getEnvironment() {
-    return _env;
-  }
-
-
-
-
-  public static void setEnvironment( final String env ) {
-    _env = env;
-  }
-
-
-
-
-  public static boolean isQuiet() {
-    return QUIET;
-  }
-
-
-
-
-  public static void setQuiet( final boolean quiet ) {
-    QUIET = quiet;
-  }
-
-
-
-
-  public static boolean isVerbose() {
-    return VERBOSE;
-  }
-
-
-
-
-  public static void setVerbose( final boolean verbose ) {
-    VERBOSE = verbose;
-  }
-
-
-
-
-  public static boolean isDebug() {
-    return DEBUG;
-  }
-
-
-
-
-  public static void setDebug( final boolean debug ) {
-    DEBUG = debug;
-  }
-
-
-
-
-  /**
-   * Formats the given number as a most significant number of bytes.
-   * 
-   * @param number the number to format
-   * 
-   * @return the number formatted for display
-   */
-  public static String formatSizeBytes( final Number number ) {
-    return formatSizeBytes( number.doubleValue() );
-  }
-
-
-
-
-  /**
-    * Retrieve the property appropriate for our environment
-    * 
-    * @param key the property to retrieve
-    * 
-    * @return the value currently set in that property
-    */
-  public static String getProperty( final String key ) {
-    return SystemPropertyUtil.getString( _env + "." + key );
-  }
-
-
-
-
-  /**
-   * Get the value of the encrypted property
-   * 
-   * @param key the property to retrieve
-   * 
-   * @return the value currently set in that property
-   */
-  public static String getEncryptedProperty( final String key ) {
-    String rawValue = SystemPropertyUtil.getString( _env + "." + key );
-    if ( rawValue != null ) {
-      try {
-        return CipherUtil.decrypt( rawValue );
-      } catch ( Exception e ) {
-        error( "Problems getting encrypted property '" + key + "' = '" + rawValue + "' - " + e.toString() );
-        e.printStackTrace();
+      for ( int xa = 0; xa < pad; xa++ ) {
+        tgt.append( '0' );
       }
     }
-    return null;
-  }
-
-
-
-
-  /**
-   * Write an informational message to the console.
-   * 
-   * @param msg The message to write.
-   */
-  public static void info( final Object msg ) {
-    if ( !QUIET ) {
-      System.out.println( msg );
-    }
-  }
-
-
-
-
-  /**
-   * Write a detailed message relating to this classes operation to the 
-   * console.
-   * 
-   * @param msg The message to write.
-   */
-  public static void trace( final Object msg ) {
-
-    if ( !QUIET && VERBOSE ) {
-      System.out.println( msg );
-    }
+    tgt.append( val );
   }
 
 
@@ -336,6 +105,19 @@ public abstract class AbstractAction implements Action {
 
 
   /**
+   * Display the given message on the error stream and exit with an exit code 
+   * of 1.
+   * 
+   * @param msg The message to display.
+   */
+  public static void exit( final String msg ) {
+    exit( msg, 1 );
+  }
+
+
+
+
+  /**
    * Display the given message on the error stream and exit with the given
    * code.
    * 
@@ -351,13 +133,208 @@ public abstract class AbstractAction implements Action {
 
 
   /**
-   * Display the given message on the error stream and exit with an exit code 
-   * of 1.
+   * Formats the given number as a most significant number of bytes.
    * 
-   * @param msg The message to display.
+   * @param number the number to format
+   * 
+   * @return the number formatted for display
    */
-  public static void exit( final String msg ) {
-    exit( msg, 1 );
+  public static String formatSizeBytes( final Number number ) {
+    return formatSizeBytes( number.doubleValue() );
+  }
+
+
+
+
+  /**
+   * Get the value of the encrypted property
+   * 
+   * @param key the property to retrieve
+   * 
+   * @return the value currently set in that property
+   */
+  public static String getEncryptedProperty( final String key ) {
+    final String rawValue = SystemPropertyUtil.getString( _env + "." + key );
+    if ( rawValue != null ) {
+      try {
+        return CipherUtil.decrypt( rawValue );
+      } catch ( final Exception e ) {
+        error( "Problems getting encrypted property '" + key + "' = '" + rawValue + "' - " + e.toString() );
+        e.printStackTrace();
+      }
+    }
+    return null;
+  }
+
+
+
+
+  public static String getEnvironment() {
+    return _env;
+  }
+
+
+
+
+  /**
+    * Retrieve the property appropriate for our environment
+    * 
+    * @param key the property to retrieve
+    * 
+    * @return the value currently set in that property
+    */
+  public static String getProperty( final String key ) {
+    return SystemPropertyUtil.getString( _env + "." + key );
+  }
+
+
+
+
+  /**
+   * Write an informational message to the console.
+   * 
+   * @param msg The message to write.
+   */
+  public static void info( final Object msg ) {
+    if ( !QUIET ) {
+      System.out.println( msg );
+    }
+  }
+
+
+
+
+  public static boolean isDebug() {
+    return DEBUG;
+  }
+
+
+
+
+  public static boolean isQuiet() {
+    return QUIET;
+  }
+
+
+
+
+  public static boolean isVerbose() {
+    return VERBOSE;
+  }
+
+
+
+
+  public static void setDebug( final boolean debug ) {
+    DEBUG = debug;
+  }
+
+
+
+
+  public static void setEnvironment( final String env ) {
+    _env = env;
+  }
+
+
+
+
+  public static void setQuiet( final boolean quiet ) {
+    QUIET = quiet;
+  }
+
+
+
+
+  public static void setVerbose( final boolean verbose ) {
+    VERBOSE = verbose;
+  }
+
+
+
+
+  /**
+   * Write a detailed message relating to this classes operation to the 
+   * console.
+   * 
+   * @param msg The message to write.
+   */
+  public static void trace( final Object msg ) {
+
+    if ( !QUIET && VERBOSE ) {
+      System.out.println( msg );
+    }
+  }
+
+
+
+
+  public AbstractAction() {
+    // Fill the symbol table with system properties
+    _symbolTable.readSystemProperties();
+  }
+
+
+
+
+  /**
+   * Determine if the argument has been set.
+   * 
+   * @param name Name of the command line argument to check.
+   * 
+   * @return true if the argument has been set, false otherwise.
+   */
+  protected boolean argumentExists( final String name ) {
+    return CLI.getCommandLine().hasOption( name );
+  }
+
+
+
+
+  /**
+   * @see coyote.cli.actions.Action#buildOptions(org.apache.commons.cli.Options)
+   */
+  @Override
+  public void buildOptions( final Options o ) {}
+
+
+
+
+  /**
+   * Most actions do not need to close resources.  If they do, they can over-
+   * ride this method.
+   */
+  @Override
+  public void close() {}
+
+
+
+
+  /**
+   * Formats the given number of milliseconds into hours, minutes and seconds 
+   * and if requested the remaining milliseconds.
+   * 
+   * @param val the interval in milliseconds
+   * 
+   * @return the time interval in hh:mm:ss format.
+   */
+  public String formatElapsedMillis( long val, final boolean millis ) {
+    final StringBuilder buf = new StringBuilder( 20 );
+    String sgn = "";
+
+    if ( val < 0 ) {
+      sgn = "-";
+      val = Math.abs( val );
+    }
+
+    append( buf, sgn, 0, ( val / 3600000 ) );
+    append( buf, ":", 2, ( ( val % 3600000 ) / 60000 ) );
+    append( buf, ":", 2, ( ( val % 60000 ) / 1000 ) );
+    if ( millis ) {
+      append( buf, ".", 3, ( val % 1000 ) );
+    }
+
+    return buf.toString();
   }
 
 
@@ -377,10 +354,11 @@ public abstract class AbstractAction implements Action {
     try {
       if ( CLI.getCommandLine() != null ) {
         final Object obj = CLI.getCommandLine().getParsedOptionValue( name );
-        if ( obj != null )
+        if ( obj != null ) {
           return obj.toString();
-        else
+        } else {
           return null;
+        }
       } else {
         // We were not called from the command line and no argument
         // parsing was performed
@@ -397,24 +375,22 @@ public abstract class AbstractAction implements Action {
 
 
   /**
-   * Determine if the argument has been set.
-   * 
-   * @param name Name of the command line argument to check.
-   * 
-   * @return true if the argument has been set, false otherwise.
+   * Retrieve the output format from the command line (defaults to 'TXT').
+   *  
+   * @return the output format from the command line 
    */
-  protected boolean argumentExists( String name ) {
-    return CLI.getCommandLine().hasOption( name );
+  public String getDisplayFormat() {
+    if ( _displayFormat == null ) {
+      _displayFormat = getCommandLineValue( OPT_FMT );
+
+      // Default to TXT if no format was given
+      if ( ( _displayFormat == null ) || ( _displayFormat.trim().length() < 1 ) ) {
+        _displayFormat = FMT_TXT;
+      }
+    }
+
+    return _displayFormat;
   }
-
-
-
-
-  /**
-   * @see coyote.cli.actions.Action#buildOptions(org.apache.commons.cli.Options)
-   */
-  @Override
-  public void buildOptions( Options o ) {}
 
 
 
@@ -427,9 +403,117 @@ public abstract class AbstractAction implements Action {
    */
   @Override
   public String getHelp() {
-    StringBuffer b = new StringBuffer();
+    final StringBuffer b = new StringBuffer();
     b.append( "No additional help is available." );
     return b.toString();
+  }
+
+
+
+
+  /**
+   * This sends data to the chosen (or default) output stream.
+   * 
+   * <p>This essentially performs a {@code print(Object)} on the output stream,
+   * so line feeds and returns should be embedded in the data if they are 
+   * desired.</p>
+   * 
+   * <p>This method is a convenience wrapper around {@code OUT.print(data)}. 
+   * For slightly more control over output, the {@code OUT} attribute can be 
+   * used directly. It is a {@link PrintWriter} connected to the desired output
+   * stream.</p>
+   * 
+   * <p>The output flushes which each call to this method.</p> 
+   * 
+   * @param data the data to send to the previously selected output stream.
+   */
+  public void output( final Object data ) {
+    OUT.print( data );
+    OUT.flush();
+  }
+
+
+
+
+  /**
+   * Same as {@link #output(Object)} except this adds a line terminator after 
+   * the the given data.
+   * 
+   * @param data the data to send to the previously selected output stream.
+   */
+  public void outputLine( final Object data ) {
+    OUT.print( data );
+    OUT.print( StringUtil.LINE_FEED );
+    OUT.flush();
+  }
+
+
+
+
+  public void setDisplayFormat( final String fmt ) {
+    _displayFormat = fmt;
+  }
+
+
+
+
+  /**
+   * This sets the destination of our output.
+   * 
+   * <p>This method uses template processing to perform substitutions based 
+   * on the currently set symbol table. This table contains all the system 
+   * properties and several common command line arguments using the name of 
+   * the argument name as the symbol and the argument itself as the value.</p>
+   * 
+   * <p>This is expected to be a filename, and this method will perform 
+   * processing necessary to ensure that it is valid and writable before 
+   * continuing. If not, it will exit with an appropriate message.</p>
+   * 
+   * <p>If the filename is null or empty, this method will use STDOUT of output
+   * in a manner similar to {@code System.out}. In fact, it is 
+   * expected most output will be sent to the console (STDOUT) and not a 
+   * file.</p>
+   * 
+   * @param filename The name of the file to sent output.
+   */
+  public void setOutput( final String filename ) {
+    debug( "Setting output to " + filename );
+    if ( ( filename != null ) && ( filename.trim().length() > 0 ) ) {
+
+      // Create a template using our current symbol table
+      final Template tmplt = new Template( filename, _symbolTable );
+
+      // parse and replace
+      final String fname = tmplt.toString();
+
+      final File file = new File( fname );
+
+      if ( file.exists() ) {
+        if ( file.isDirectory() ) {
+          exit( "File '" + file + "' exists but is a directory", 2 );
+        }
+        if ( file.canWrite() == false ) {
+          exit( "File '" + file + "' exists but cannot be written", 2 );
+        }
+        debug( "Over-writing existing file '" + file + "'" );
+      } else {
+        final File parent = file.getParentFile();
+        if ( ( parent != null ) && ( parent.exists() == false ) ) {
+          if ( parent.mkdirs() == false ) {
+            exit( "File '" + file + "' could not be created", 2 );
+          }
+        }
+      }
+
+      try {
+        OUT = new PrintStream( file );
+      } catch ( final FileNotFoundException e ) {
+        // Should not happen since we performed checks above
+        exit( "Could not send output to file '" + file.getName() + "' (" + file.getAbsolutePath() + ") reason:" + e.getMessage(), 2 );
+      }
+
+    } // filename not blank
+
   }
 
 
@@ -444,88 +528,4 @@ public abstract class AbstractAction implements Action {
   public void validate() throws ActionException {
 
   }
-
-
-
-
-  /**
-   * Retrieve the output format from the command line (defaults to 'TXT').
-   *  
-   * @return the output format from the command line 
-   */
-  public String getDisplayFormat() {
-    if ( _displayFormat == null ) {
-      _displayFormat = getCommandLineValue( OPT_FMT );
-
-      // Default to TXT if no format was given
-      if ( _displayFormat == null || _displayFormat.trim().length() < 1 )
-        _displayFormat = FMT_TXT;
-    }
-
-    return _displayFormat;
-  }
-
-
-
-
-  public void setDisplayFormat( String fmt ) {
-    this._displayFormat = fmt;
-  }
-
-
-
-
-  /**
-   * Formats the given number of milliseconds into hours, minutes and seconds 
-   * and if requested the remaining milliseconds.
-   * 
-   * @param val the interval in milliseconds
-   * 
-   * @return the time interval in hh:mm:ss format.
-   */
-  public String formatElapsedMillis( long val, boolean millis ) {
-    StringBuilder buf = new StringBuilder( 20 );
-    String sgn = "";
-
-    if ( val < 0 ) {
-      sgn = "-";
-      val = Math.abs( val );
-    }
-
-    append( buf, sgn, 0, ( val / 3600000 ) );
-    append( buf, ":", 2, ( ( val % 3600000 ) / 60000 ) );
-    append( buf, ":", 2, ( ( val % 60000 ) / 1000 ) );
-    if ( millis )
-      append( buf, ".", 3, ( val % 1000 ) );
-
-    return buf.toString();
-  }
-
-
-
-
-  /** Append a right-aligned and zero-padded numeric value to a `StringBuilder`. */
-  static private void append( StringBuilder tgt, String pfx, int dgt, long val ) {
-    tgt.append( pfx );
-    if ( dgt > 1 ) {
-      int pad = ( dgt - 1 );
-      for ( long xa = val; xa > 9 && pad > 0; xa /= 10 ) {
-        pad--;
-      }
-      for ( int xa = 0; xa < pad; xa++ ) {
-        tgt.append( '0' );
-      }
-    }
-    tgt.append( val );
-  }
-
-
-
-
-  /**
-   * Most actions do not need to close resources.  If they do, they can over-
-   * ride this method.
-   */
-  @Override
-  public void close() {}
 }

@@ -38,35 +38,10 @@ public class GeoIp extends RestAction {
 
 
   /**
-   * @see coyote.cli.actions.AbstractAction#getHelp()
-   */
-  @Override
-  public String getHelp() {
-    StringBuffer b = new StringBuffer();
-    // _______----:----1----:----2----:----3----:----4----:----5----:----6----:----7----:----8
-    b.append( "Get the location of the computer base on the geolocation of the IP address.\r\n" );
-    return b.toString();
-  }
-
-
-
-
-  /**
    * @see coyote.cli.actions.AbstractAction#buildOptions(org.apache.commons.cli.Options)
    */
   @Override
-  public void buildOptions( Options o ) {
-
-  }
-
-
-
-
-  /**
-   * @see coyote.cli.actions.AbstractAction#validate()
-   */
-  @Override
-  public void validate() throws ActionException {
+  public void buildOptions( final Options o ) {
 
   }
 
@@ -90,7 +65,7 @@ public class GeoIp extends RestAction {
     request.setConfig( config );
 
     // The host of our targeted instance
-    HttpHost target = new HttpHost( "www.telize.com", 80, "http" );;
+    final HttpHost target = new HttpHost( "www.telize.com", 80, "http" );;
 
     // Now set the credentials if necessary
     //credentialsProvider.setCredentials( new AuthScope( "www.telize.com", 80 ), new UsernamePasswordCredentials( "username", "password" ) );
@@ -103,9 +78,34 @@ public class GeoIp extends RestAction {
       // get the results of processing the request
       retval = response.getResult();
       info( JSONMarshaler.toFormattedString( retval ) );
-    } catch ( IOException e ) {
+    } catch ( final IOException e ) {
       e.printStackTrace();
     }
+
+  }
+
+
+
+
+  /**
+   * @see coyote.cli.actions.AbstractAction#getHelp()
+   */
+  @Override
+  public String getHelp() {
+    final StringBuffer b = new StringBuffer();
+    // _______----:----1----:----2----:----3----:----4----:----5----:----6----:----7----:----8
+    b.append( "Get the location of the computer base on the geolocation of the IP address.\r\n" );
+    return b.toString();
+  }
+
+
+
+
+  /**
+   * @see coyote.cli.actions.AbstractAction#validate()
+   */
+  @Override
+  public void validate() throws ActionException {
 
   }
 

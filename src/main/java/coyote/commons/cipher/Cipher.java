@@ -16,26 +16,6 @@ package coyote.commons.cipher;
  */
 public interface Cipher {
   /**
-   * Returns the name of the cipher algorithm.
-   * 
-   * @return the name of the cipher algorithm.
-   */
-  public String getName();
-
-
-
-
-  /**
-   * Initialize the algorithm with a key to be used for the cipher.
-   * 
-   * @param key The key to use for all operations.
-   */
-  public void init( final byte[] key );
-
-
-
-
-  /**
    * Returns the decrypted bytes for the given enciphered bytes.
    * 
    * @param data The data to decipher.
@@ -76,6 +56,16 @@ public interface Cipher {
 
 
   /**
+   * Returns the name of the cipher algorithm.
+   * 
+   * @return the name of the cipher algorithm.
+   */
+  public String getName();
+
+
+
+
+  /**
    * Get a fresh instance of this cipher.
    * 
    * <p>It is generally not a good idea to share ciphers as they are usually 
@@ -85,4 +75,14 @@ public interface Cipher {
    * @return A new instance of the cipher ready to initialize and use.
    */
   public Cipher getNewInstance();
+
+
+
+
+  /**
+   * Initialize the algorithm with a key to be used for the cipher.
+   * 
+   * @param key The key to use for all operations.
+   */
+  public void init( final byte[] key );
 }

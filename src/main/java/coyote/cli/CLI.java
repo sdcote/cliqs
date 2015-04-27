@@ -76,8 +76,72 @@ public class CLI extends AbstractAction {
   private static final String UAT = "UAT";
   private static final String PROD = "PROD";
 
+
+
+
+  public static CommandLine getCommandLine() {
+    return _cmd;
+  }
+
+
+
+
+  /**
+   * This is the main entry point into the utility.
+   * 
+   * @param args command line arguments to parse.
+   */
+  public static void main( final String[] args ) {
+
+    // Load system properties from conventional locations
+    SystemPropertyUtil.load( appname );
+
+    // Load configuration context from the class path
+    @SuppressWarnings("resource")
+    final ApplicationContext applicationContext = new ClassPathXmlApplicationContext( CONFIG_FILES );
+
+    // Now get the configured command line interface object
+    final CLI loader = applicationContext.getBean( "cli", CLI.class );
+
+    try {
+
+      // process the command line arguments
+      loader.processArgs( args );
+
+      // validate the arguments and select the appropriate action to
+      // handle the request
+      loader.validate();
+
+      final long start = System.currentTimeMillis();
+      loader.execute();
+      final long elapsed = System.currentTimeMillis() - start;
+
+      debug( "Action completed - execution time " + DateUtil.formatElapsed( elapsed ) );
+
+      // send a tone to the console if the command took longer than 30
+      // seconds and we are not being quiet...just to let you know the
+      // action is done
+      if ( !isQuiet() && ( elapsed > 30000 ) ) {
+        System.out.println( (char)7 );
+      }
+
+      System.exit( 0 );
+
+    } catch ( final Exception ex ) {
+      ex.printStackTrace();
+    }
+    finally {
+      if ( OUT != System.out ) {
+        debug( "Closing output stream." );
+        OUT.close();
+      }
+    }
+
+  }
+
   // Actions Supported
   private final String ACTION_HELP = "Help";
+
   private final String ACTION_VERSION = "Version";
 
   // That which does what was asked
@@ -91,57 +155,6 @@ public class CLI extends AbstractAction {
    */
   public CLI() {
 
-  }
-
-
-
-
-  /**
-   * Set all the actions supported by this CLI mapped by their "noun"
-   * 
-   * @param map the map of actions this CLI is to support
-   */
-  public void setActionMap( Map<String, Action> map ) {
-    synchronized( actions ) {
-      for ( String name : map.keySet() ) {
-        actions.put( name.toLowerCase(), map.get( name ) );
-      }
-    }
-
-  }
-
-
-
-
-  /**
-   * @return a collection of all the actions configured in this CLI
-   */
-  public Collection<Action> getActions() {
-    return actions.values();
-  }
-
-
-
-
-  /**
-   * @return the map of Nouns and their associated Actions
-   */
-  public Map<String, Action> getActionMap() {
-    return actions;
-  }
-
-
-
-
-  public String getVersion() {
-    return VERSION;
-  }
-
-
-
-
-  public static CommandLine getCommandLine() {
-    return _cmd;
   }
 
 
@@ -167,11 +180,85 @@ public class CLI extends AbstractAction {
     o.addOption( OptionBuilder.hasArg().isRequired( false ).withArgName( "filename" ).withType( String.class ).withDescription( "Output results to file (try 'default')" ).create( OPT_OUT ) );
 
     // use a visitor pattern to build the options the actions expect
-    for ( Action action : actions.values() ) {
+    for ( final Action action : actions.values() ) {
       action.buildOptions( o );
     }
 
     return o;
+  }
+
+
+
+
+  /**
+   * Based on the contents of the system-wide arguments, perform some manner
+   * of processing.
+   */
+  @Override
+  public void execute() {
+
+    // Now execute the appropriate action
+
+    if ( action != null ) {
+      try {
+        // Have the action validate the arguments
+        action.validate();
+
+        try {
+          // Now try to execute the action with the validated
+          // arguments
+          action.execute();
+
+        } catch ( final Exception e ) {
+          error( "Unexpected issues executing action: " + e.getMessage() );
+          error( e.getMessage() );
+
+          if ( isDebug() || isVerbose() ) {
+            e.printStackTrace( System.err );
+          }
+
+        }
+      } catch ( final Exception e ) {
+        error( "Problems validating action: " + e.getClass().getSimpleName() + " (" + e.getMessage() + ")" );
+        if ( isDebug() || isVerbose() ) {
+          e.printStackTrace( System.err );
+        }
+      }
+      finally {
+        action.close();
+      }
+
+    } else {
+      exit( "No action to perform", 2 );
+    }
+
+  }
+
+
+
+
+  /**
+   * @return the map of Nouns and their associated Actions
+   */
+  public Map<String, Action> getActionMap() {
+    return actions;
+  }
+
+
+
+
+  /**
+   * @return a collection of all the actions configured in this CLI
+   */
+  public Collection<Action> getActions() {
+    return actions.values();
+  }
+
+
+
+
+  public String getVersion() {
+    return VERSION;
   }
 
 
@@ -184,15 +271,15 @@ public class CLI extends AbstractAction {
   private void populateSymbolTable() {
 
     // First put all the arguments in the table
-    for ( Iterator<Option> it = _cmd.iterator(); it.hasNext(); ) {
-      Option option = it.next();
+    for ( final Iterator<Option> it = _cmd.iterator(); it.hasNext(); ) {
+      final Option option = it.next();
 
       try {
-        Object value = _cmd.getParsedOptionValue( option.getOpt() );
+        final Object value = _cmd.getParsedOptionValue( option.getOpt() );
         if ( value != null ) {
           _symbolTable.put( option.getOpt(), value.toString() );
         }
-      } catch ( ParseException e ) {
+      } catch ( final ParseException e ) {
         error( e.getMessage() );
       }
     }
@@ -201,10 +288,10 @@ public class CLI extends AbstractAction {
     _symbolTable.put( CLI.OPT_ENV, getEnvironment() );
 
     // Place date and time values in the symbol table
-    Calendar cal = Calendar.getInstance();
+    final Calendar cal = Calendar.getInstance();
 
     // Add current 'now' Date, Time and DateTime
-    Date date = new Date();
+    final Date date = new Date();
     if ( date != null ) {
       cal.setTime( date );
       _symbolTable.put( "nowDate", DateUtil.formatDate( date ) );
@@ -297,6 +384,23 @@ public class CLI extends AbstractAction {
 
 
   /**
+   * Set all the actions supported by this CLI mapped by their "noun"
+   * 
+   * @param map the map of actions this CLI is to support
+   */
+  public void setActionMap( final Map<String, Action> map ) {
+    synchronized( actions ) {
+      for ( final String name : map.keySet() ) {
+        actions.put( name.toLowerCase(), map.get( name ) );
+      }
+    }
+
+  }
+
+
+
+
+  /**
    * Based on the contents of the system-wide arguments, perform some manner
    * of processing.
    */
@@ -318,105 +422,6 @@ public class CLI extends AbstractAction {
     if ( action == null ) {
       exit( "Unsupported noun '" + NOUN + "'\r\nTry 'Load HELP'", 1 );
     }
-  }
-
-
-
-
-  /**
-   * Based on the contents of the system-wide arguments, perform some manner
-   * of processing.
-   */
-  public void execute() {
-
-    // Now execute the appropriate action
-
-    if ( action != null ) {
-      try {
-        // Have the action validate the arguments
-        action.validate();
-
-        try {
-          // Now try to execute the action with the validated
-          // arguments
-          action.execute();
-
-        } catch ( Exception e ) {
-          error( "Unexpected issues executing action: " + e.getMessage() );
-          error( e.getMessage() );
-
-          if ( isDebug() || isVerbose() )
-            e.printStackTrace( System.err );
-
-        }
-      } catch ( Exception e ) {
-        error( "Problems validating action: " + e.getClass().getSimpleName() + " (" + e.getMessage() + ")" );
-        if ( isDebug() || isVerbose() )
-          e.printStackTrace( System.err );
-      }
-      finally {
-        action.close();
-      }
-
-    } else {
-      exit( "No action to perform", 2 );
-    }
-
-  }
-
-
-
-
-  /**
-   * This is the main entry point into the utility.
-   * 
-   * @param args command line arguments to parse.
-   */
-  public static void main( final String[] args ) {
-
-    // Load system properties from conventional locations
-    SystemPropertyUtil.load( appname );
-
-    // Load configuration context from the class path
-    @SuppressWarnings("resource")
-    ApplicationContext applicationContext = new ClassPathXmlApplicationContext( CONFIG_FILES );
-
-    // Now get the configured command line interface object
-    CLI loader = applicationContext.getBean( "cli", CLI.class );
-
-    try {
-
-      // process the command line arguments
-      loader.processArgs( args );
-
-      // validate the arguments and select the appropriate action to
-      // handle the request
-      loader.validate();
-
-      long start = System.currentTimeMillis();
-      loader.execute();
-      long elapsed = System.currentTimeMillis() - start;
-
-      debug( "Action completed - execution time " + DateUtil.formatElapsed( elapsed ) );
-
-      // send a tone to the console if the command took longer than 30
-      // seconds and we are not being quiet...just to let you know the
-      // action is done
-      if ( !isQuiet() && elapsed > 30000 )
-        System.out.println( (char)7 );
-
-      System.exit( 0 );
-
-    } catch ( final Exception ex ) {
-      ex.printStackTrace();
-    }
-    finally {
-      if ( OUT != System.out ) {
-        debug( "Closing output stream." );
-        OUT.close();
-      }
-    }
-
   }
 
 }

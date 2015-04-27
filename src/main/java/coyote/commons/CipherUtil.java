@@ -51,12 +51,28 @@ public class CipherUtil {
 
 
   /**
-   * @param cipher
+   * Decrypt the given string.
+   * 
+   * @param ciphertext the encrypted string to decrypt
+   * 
+   * @return The decrypted string
    */
-  public static void register( Cipher cipher ) {
-    if ( cipher != null && cipher.getName() != null ) {
-      cipherMap.put( cipher.getName().toLowerCase(), cipher );
-    }
+  public static String decrypt( final String ciphertext ) {
+
+    // Create a new instance of the Cipher to decrypt our data
+    final Cipher cipher = CipherUtil.getCipher( defaultCipherName );
+
+    // Initialize the cipher with our secret key
+    cipher.init( StringUtil.getBytesUtf8( DEFAULT_SECRET ) );
+
+    // decode the bytes
+    final byte[] cipherdata = new Base32().decode( ciphertext );
+
+    // Decrypt the data  
+    final byte[] cleardata = cipher.decrypt( cipherdata );
+
+    // return the UTF16 encoded string
+    return StringUtil.newStringUtf16( cleardata );
   }
 
 
@@ -69,17 +85,17 @@ public class CipherUtil {
    * 
    * @return encrypted text string suitable for use in any text file
    */
-  public static String encrypt( String token ) {
+  public static String encrypt( final String token ) {
 
     // Create a new instance of the Cipher
-    Cipher cipher = CipherUtil.getCipher( defaultCipherName );
+    final Cipher cipher = CipherUtil.getCipher( defaultCipherName );
 
     // Initialize the cipher with our secret key here we just use the UTF16 
     // encoding of our key string
     cipher.init( StringUtil.getBytesUtf8( DEFAULT_SECRET ) );
 
     // Encrypt the text with the UTF16 encoded bytes our our clear text string 
-    byte[] cipherdata = cipher.encrypt( StringUtil.getBytesUtf16( token ) );
+    final byte[] cipherdata = cipher.encrypt( StringUtil.getBytesUtf16( token ) );
 
     // Return the base32 encoded ciphertext
     return new Base32().encodeAsString( cipherdata );
@@ -88,37 +104,9 @@ public class CipherUtil {
 
 
 
-  /**
-   * Decrypt the given string.
-   * 
-   * @param ciphertext the encrypted string to decrypt
-   * 
-   * @return The decrypted string
-   */
-  public static String decrypt( String ciphertext ) {
-
-    // Create a new instance of the Cipher to decrypt our data
-    Cipher cipher = CipherUtil.getCipher( defaultCipherName );
-
-    // Initialize the cipher with our secret key
-    cipher.init( StringUtil.getBytesUtf8( DEFAULT_SECRET ) );
-
-    // decode the bytes
-    byte[] cipherdata = new Base32().decode( ciphertext );
-
-    // Decrypt the data  
-    byte[] cleardata = cipher.decrypt( cipherdata );
-
-    // return the UTF16 encoded string
-    return StringUtil.newStringUtf16( cleardata );
-  }
-
-
-
-
-  public static Cipher getCipher( String name ) {
+  public static Cipher getCipher( final String name ) {
     if ( name != null ) {
-      Cipher retval = cipherMap.get( name.toLowerCase() );
+      final Cipher retval = cipherMap.get( name.toLowerCase() );
       if ( retval != null ) {
         return retval.getNewInstance();
       }
@@ -140,16 +128,6 @@ public class CipherUtil {
 
 
   /**
-   * @param name the cipher name to set as the default
-   */
-  public static void setDefaultCipherName( String name ) {
-    CipherUtil.defaultCipherName = name;
-  }
-
-
-
-
-  /**
    * @return the default secret used as an initialization vector or key
    */
   public static String getDefaultSecret() {
@@ -160,9 +138,31 @@ public class CipherUtil {
 
 
   /**
+   * @param cipher
+   */
+  public static void register( final Cipher cipher ) {
+    if ( ( cipher != null ) && ( cipher.getName() != null ) ) {
+      cipherMap.put( cipher.getName().toLowerCase(), cipher );
+    }
+  }
+
+
+
+
+  /**
+   * @param name the cipher name to set as the default
+   */
+  public static void setDefaultCipherName( final String name ) {
+    CipherUtil.defaultCipherName = name;
+  }
+
+
+
+
+  /**
    * @param token the default secret to set as an initialization vector or key
    */
-  public static void setDefaultSecret( String token ) {
+  public static void setDefaultSecret( final String token ) {
     CipherUtil.defaultSecret = token;
   }
 

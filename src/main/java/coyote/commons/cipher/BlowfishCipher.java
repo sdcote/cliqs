@@ -160,11 +160,6 @@ public class BlowfishCipher extends AbstractCipher implements Cipher {
   //given in bytes from a value in bits
   private static final int MAX_USER_KEY_LENGTH = 448 / 8;
 
-  // This Blowfish object session key and s-boxes data placeholders.
-  private final int[] P = new int[18];
-
-  private final int[] sKey = new int[4 * 256];
-
 
 
 
@@ -256,12 +251,18 @@ public class BlowfishCipher extends AbstractCipher implements Cipher {
     final String text2 = new String( data2 );
     System.out.println( text2 );
 
-    if ( text2.equals( text2 ) )
+    if ( text2.equals( text2 ) ) {
       System.out.println( "Test complete, text values are equal" );
-    else
+    } else {
       System.err.println( "Decryption failed!" );
+    }
 
   }
+
+  // This Blowfish object session key and s-boxes data placeholders.
+  private final int[] P = new int[18];
+
+  private final int[] sKey = new int[4 * 256];
 
 
 
@@ -404,7 +405,7 @@ public class BlowfishCipher extends AbstractCipher implements Cipher {
   public byte[] encrypt( final byte[] bytes ) {
 
     // pad the data using RFC-1423 scheme
-    byte[] data = AbstractCipher.pad( bytes );
+    final byte[] data = AbstractCipher.pad( bytes );
 
     // how many blocks will we perform?
     final int blockCount = data.length / BlowfishCipher.BLOCK_SIZE;
@@ -440,6 +441,17 @@ public class BlowfishCipher extends AbstractCipher implements Cipher {
   @Override
   public String getName() {
     return BlowfishCipher.CIPHER_NAME;
+  }
+
+
+
+
+  /**
+   * @see coyote.commons.cipher.Cipher#getNewInstance()
+   */
+  @Override
+  public Cipher getNewInstance() {
+    return new BlowfishCipher();
   }
 
 
@@ -559,17 +571,6 @@ public class BlowfishCipher extends AbstractCipher implements Cipher {
 
     out[outOff] = R;
     out[outOff + 1] = L;
-  }
-
-
-
-
-  /**
-   * @see coyote.commons.cipher.Cipher#getNewInstance()
-   */
-  @Override
-  public Cipher getNewInstance() {
-    return new BlowfishCipher();
   }
 
 }

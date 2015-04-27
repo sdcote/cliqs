@@ -32,20 +32,64 @@ public class StringUtil {
 
 
   /**
-   * Checks if a string is not null, empty ("") and not only whitespace.
+   * Encodes the given string into a sequence of bytes using the named charset, 
+   * storing the result into a new byte array.
    * 
-   * <p>This is a convenience wrapper around isBlank(String) to make code 
-   * slightly more readable.</p>
+   * <p>This method catches {@link UnsupportedEncodingException} and rethrows 
+   * it as {@link IllegalStateException}, which should never happen for a 
+   * required charset name. Use this method when the encoding is required to be 
+   * in the JRE.</p>
    * 
-   * @param str the String to check, may be null
+   * @param string the String to encode, may be {@code null}
+   * @param charsetName The name of a required {@link java.nio.charset.Charset}
    * 
-   * @return <code>true</code> if the String is not empty and not null and not
-   *         whitespace
+   * @return encoded bytes, or {@code null} if the input string was {@code null}
    * 
-   * @see #isBlank(String)
+   * @throws IllegalStateException Thrown when a {@link UnsupportedEncodingException} is caught, which should never happen for a required charset name.
    */
-  public static boolean isNotBlank( String str ) {
-    return !StringUtil.isBlank( str );
+  public static byte[] getBytesUnchecked( final String string, final String charsetName ) {
+    if ( string == null ) {
+      return null;
+    }
+    try {
+      return string.getBytes( charsetName );
+    } catch ( final UnsupportedEncodingException e ) {
+      throw StringUtil.newIllegalStateException( charsetName, e );
+    }
+  }
+
+
+
+
+  /**
+   * Encodes the given string into a sequence of bytes using the UTF-16 charset, 
+   * storing the result into a new byte array.
+   * 
+   * @param string the String to encode, may be {@code null}
+   * 
+   * @return encoded bytes, or {@code null} if the input string was {@code null}
+   * 
+   * @throws IllegalStateException Thrown when the charset is missing, which should be never according the the Java specification.
+   */
+  public static byte[] getBytesUtf16( final String string ) {
+    return StringUtil.getBytesUnchecked( string, StringUtil.UTF_16 );
+  }
+
+
+
+
+  /**
+   * Encodes the given string into a sequence of bytes using the UTF-8 charset, 
+   * storing the result into a new byte array.
+   * 
+   * @param string the String to encode, may be {@code null}
+   * 
+   * @return encoded bytes, or {@code null} if the input string was {@code null}
+   * 
+   * @throws IllegalStateException Thrown when the charset is missing, which should be never according the the Java specification.
+   */
+  public static byte[] getBytesUtf8( final String string ) {
+    return StringUtil.getBytesUnchecked( string, StringUtil.UTF_8 );
   }
 
 
@@ -59,9 +103,9 @@ public class StringUtil {
    * @return <code>true</code> if the String is not empty and not null and not
    *         whitespace
    */
-  public static boolean isBlank( String str ) {
+  public static boolean isBlank( final String str ) {
     int strLen;
-    if ( str == null || ( strLen = str.length() ) == 0 ) {
+    if ( ( str == null ) || ( ( strLen = str.length() ) == 0 ) ) {
       return true;
     }
     for ( int i = 0; i < strLen; i++ ) {
@@ -70,6 +114,33 @@ public class StringUtil {
       }
     }
     return true;
+  }
+
+
+
+
+  /**
+   * Checks if a string is not null, empty ("") and not only whitespace.
+   * 
+   * <p>This is a convenience wrapper around isBlank(String) to make code 
+   * slightly more readable.</p>
+   * 
+   * @param str the String to check, may be null
+   * 
+   * @return <code>true</code> if the String is not empty and not null and not
+   *         whitespace
+   * 
+   * @see #isBlank(String)
+   */
+  public static boolean isNotBlank( final String str ) {
+    return !StringUtil.isBlank( str );
+  }
+
+
+
+
+  private static IllegalStateException newIllegalStateException( final String charsetName, final UnsupportedEncodingException e ) {
+    return new IllegalStateException( charsetName + ": " + e );
   }
 
 
@@ -95,34 +166,15 @@ public class StringUtil {
    * 
    * @see String#String(byte[], String)
    */
-  public static String newString( byte[] bytes, String charsetName ) {
+  public static String newString( final byte[] bytes, final String charsetName ) {
     if ( bytes == null ) {
       return null;
     }
     try {
       return new String( bytes, charsetName );
-    } catch ( UnsupportedEncodingException e ) {
+    } catch ( final UnsupportedEncodingException e ) {
       throw StringUtil.newIllegalStateException( charsetName, e );
     }
-  }
-
-
-
-
-  /**
-   * Constructs a new {@code String} by decoding the specified array of 
-   * bytes using the UTF-8 charset.
-   * 
-   * @param bytes The bytes to be decoded into characters
-   * 
-   * @return A new {@code String} decoded from the specified array of bytes 
-   * using the UTF-8 charset, or {@code null} if the input byte array was 
-   * {@code null}</p>.
-   * 
-   * @throws IllegalStateException Thrown when a {@link UnsupportedEncodingException} is caught, which should never happen since the charset is required.
-   */
-  public static String newStringUtf8( byte[] bytes ) {
-    return StringUtil.newString( bytes, StringUtil.UTF_8 );
   }
 
 
@@ -140,79 +192,27 @@ public class StringUtil {
    * 
    * @throws IllegalStateException Thrown when a {@link UnsupportedEncodingException} is caught, which should never happen since the charset is required.
    */
-  public static String newStringUtf16( byte[] bytes ) {
+  public static String newStringUtf16( final byte[] bytes ) {
     return StringUtil.newString( bytes, StringUtil.UTF_16 );
   }
 
 
 
 
-  private static IllegalStateException newIllegalStateException( String charsetName, UnsupportedEncodingException e ) {
-    return new IllegalStateException( charsetName + ": " + e );
-  }
-
-
-
-
   /**
-   * Encodes the given string into a sequence of bytes using the UTF-16 charset, 
-   * storing the result into a new byte array.
+   * Constructs a new {@code String} by decoding the specified array of 
+   * bytes using the UTF-8 charset.
    * 
-   * @param string the String to encode, may be {@code null}
+   * @param bytes The bytes to be decoded into characters
    * 
-   * @return encoded bytes, or {@code null} if the input string was {@code null}
+   * @return A new {@code String} decoded from the specified array of bytes 
+   * using the UTF-8 charset, or {@code null} if the input byte array was 
+   * {@code null}</p>.
    * 
-   * @throws IllegalStateException Thrown when the charset is missing, which should be never according the the Java specification.
+   * @throws IllegalStateException Thrown when a {@link UnsupportedEncodingException} is caught, which should never happen since the charset is required.
    */
-  public static byte[] getBytesUtf16( String string ) {
-    return StringUtil.getBytesUnchecked( string, StringUtil.UTF_16 );
-  }
-
-
-
-
-  /**
-   * Encodes the given string into a sequence of bytes using the UTF-8 charset, 
-   * storing the result into a new byte array.
-   * 
-   * @param string the String to encode, may be {@code null}
-   * 
-   * @return encoded bytes, or {@code null} if the input string was {@code null}
-   * 
-   * @throws IllegalStateException Thrown when the charset is missing, which should be never according the the Java specification.
-   */
-  public static byte[] getBytesUtf8( String string ) {
-    return StringUtil.getBytesUnchecked( string, StringUtil.UTF_8 );
-  }
-
-
-
-
-  /**
-   * Encodes the given string into a sequence of bytes using the named charset, 
-   * storing the result into a new byte array.
-   * 
-   * <p>This method catches {@link UnsupportedEncodingException} and rethrows 
-   * it as {@link IllegalStateException}, which should never happen for a 
-   * required charset name. Use this method when the encoding is required to be 
-   * in the JRE.</p>
-   * 
-   * @param string the String to encode, may be {@code null}
-   * @param charsetName The name of a required {@link java.nio.charset.Charset}
-   * 
-   * @return encoded bytes, or {@code null} if the input string was {@code null}
-   * 
-   * @throws IllegalStateException Thrown when a {@link UnsupportedEncodingException} is caught, which should never happen for a required charset name.
-   */
-  public static byte[] getBytesUnchecked( String string, String charsetName ) {
-    if ( string == null ) {
-      return null;
-    }
-    try {
-      return string.getBytes( charsetName );
-    } catch ( UnsupportedEncodingException e ) {
-      throw StringUtil.newIllegalStateException( charsetName, e );
-    }
+  public static String newStringUtf8( final byte[] bytes ) {
+    return StringUtil.newString( bytes, StringUtil.UTF_8 );
   }
 
 }

@@ -55,8 +55,9 @@ public abstract class AbstractCipher implements Cipher {
     int padding = 8 - ( data.length % 8 );
 
     // There is alway padding even it it is not needed
-    if ( padding == 0 )
+    if ( padding == 0 ) {
       padding = 8;
+    }
 
     // create the return value
     final byte[] retval = new byte[data.length + padding];
@@ -65,7 +66,9 @@ public abstract class AbstractCipher implements Cipher {
     System.arraycopy( data, 0, retval, 0, data.length );
 
     // add the padding
-    for ( int x = data.length; x < retval.length; retval[x++] = (byte)padding );
+    for ( int x = data.length; x < retval.length; retval[x++] = (byte)padding ) {
+      ;
+    }
 
     return retval;
   }
