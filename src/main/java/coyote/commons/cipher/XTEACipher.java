@@ -1,22 +1,8 @@
-/*
- * Copyright (c) 2014 Stephan D. Cote' - All rights reserved.
- * 
- * This program and the accompanying materials are made available under the 
- * terms of the MIT License which accompanies this distribution, and is 
- * available at http://creativecommons.org/licenses/MIT/
- *
- * Contributors:
- *   Stephan D. Cote 
- *      - Initial concept and initial implementation
- */
 package coyote.commons.cipher;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-
-import coyote.commons.ByteUtil;
 
 
 /**
@@ -294,99 +280,6 @@ public class XTEACipher extends AbstractCipher implements Cipher {
       e.printStackTrace();
     }
     return retval;
-  }
-
-
-
-
-  /**
-   * Quick demonstration of the XTEA cipher
-   * 
-   * @param args
-   */
-  public static void main( final String[] args ) {
-    final Cipher cipher = new XTEACipher();
-    cipher.init( "poodles".getBytes() );
-
-    final String text = "This is a test of the XTEA encryption algorithm at " + new Date().toString();
-
-    byte[] bytes = text.getBytes();
-
-    /*
-     * <p>First the data is padded to blocks of data using a PKCS5 DES CBC 
-     * encryption padding scheme described in section 1.1 of RFC-1423.</p>
-     * 
-     * <p>The last byte of the stream is ALWAYS the number of bytes added to 
-     * the end of the data. If the data ends on a boundary, then there will be 
-     * eight bytes of padding:<code><pre>
-     * 88888888 - all of the last block is padding.
-     * X7777777 - the last seven bytes are padding.
-     * XX666666 - etc.
-     * XXX55555 - etc.
-     * XXXX4444 - etc.
-     * XXXXX333 - etc.
-     * XXXXXX22 - etc.
-     * XXXXXXX1 - only the last byte is padding.</pre></code></p>
-     * 
-     * <p>According to RFC1423 section 1.1:<blockquote>The input to the DES CBC 
-     * encryption process shall be padded to a multiple of 8 octets, in the 
-     * following manner. Let n be the length in octets of the input. Pad the 
-     * input by appending 8-(n mod 8) octets to the end of the message, each 
-     * having the value 8-(n mod 8), the number of octets being added. In 
-     * hexadecimal, the possible paddings are:  01, 0202, 030303, 04040404, 
-     * 0505050505, 060606060606, 07070707070707, and 0808080808080808. All 
-     * input is padded with 1 to 8 octets to produce a multiple of 8 octets in 
-     * length. The padding can be removed unambiguously after decryption.
-     * </blockquote></p>
-     */
-    System.out.println( "Data length: " + bytes.length );
-    System.out.println( "Modulo[" + cipher.getBlockSize() + "]: " + ( bytes.length % cipher.getBlockSize() ) );
-
-    // pad the data as necessary using a PKCS5 (or RFC1423) padding scheme
-    int padding = cipher.getBlockSize() - ( bytes.length % cipher.getBlockSize() );
-
-    if ( padding == 0 ) {
-      padding = cipher.getBlockSize();
-    }
-
-    System.out.println( "encrypt padding: " + padding );
-
-    if ( padding > 0 ) {
-      final byte[] tmp = new byte[bytes.length + padding];
-      System.arraycopy( bytes, 0, tmp, 0, bytes.length );
-      for ( int x = bytes.length; x < tmp.length; tmp[x++] = (byte)padding ) {
-        ;
-      }
-      bytes = tmp;
-      System.out.println( "padded data:\r\n" + ByteUtil.dump( bytes ) );
-    }
-    /* ********************************************************************** */
-
-    final byte[] data = cipher.encrypt( bytes );
-
-    System.out.println( ByteUtil.dump( data ) );
-    System.out.println();
-
-    final Cipher cipher2 = new XTEACipher();
-    cipher2.init( "poodles".getBytes() );
-
-    byte[] data2 = cipher.decrypt( data );
-    System.out.println( ByteUtil.dump( data2 ) );
-
-    /*
-     * Now we remove the padding 
-     */
-    padding = data2[data2.length - 1];
-
-    if ( ( padding > 0 ) && ( padding < 9 ) ) {
-      final byte[] tmp = new byte[data2.length - padding];
-      System.arraycopy( data2, 0, tmp, 0, tmp.length );
-      data2 = tmp;
-    }
-
-    final String text2 = new String( data2 );
-    System.out.println( text2 );
-
   }
 
   private int[] subKeys = null;
