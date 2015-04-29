@@ -153,4 +153,18 @@ public abstract class RestAction extends AbstractAction {
     return response;
   }
 
+
+
+
+  /**
+   * Convenience method to set the credentials for a host in the credential cache.
+   * 
+   * @param target The target requiring credentials
+   * @param username the user name to place in the credential cache
+   * @param password the password to place in the credential cache
+   */
+  public void setCredentials( HttpHost target, String username, String password ) {
+    credentialsProvider.setCredentials( new AuthScope( target.getHostName(), target.getPort() ), new UsernamePasswordCredentials( username, password ) );
+  }
+
 }
