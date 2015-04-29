@@ -48,6 +48,88 @@ public class SystemPropertyUtil {
 
 
   /**
+   * Load the system properties using the given name as the base name of the 
+   * properties file for which to search and load.
+   * 
+   * <p>The given base name will be appended with {@code .properties} and 
+   * several common locations searched.</p>
+   * 
+   * @param name
+   */
+  public static void load( String name ) {
+    load( name, false );
+  }
+
+
+
+
+  /**
+   * Load the system properties using the given name as the base name of the 
+   * properties file for which to search and load and treat the proxy password 
+   * (if found) as an encrypted string.
+   * 
+   * <p>The given base name will be appended with {@code .properties} and 
+   * several common locations searched.</p>
+   * 
+   * @param name
+   */
+  public static void loadSecure( String name ) {
+    load( name, true );
+  }
+
+
+
+
+  /**
+   * Load the property file with the given name into the system properties.
+   * 
+   * <p>The name is appended with '.properties' to come up with the full file 
+   * name. Therefore passing this the name of 'app' will result in a file named
+   * 'app.properties' being used.</p>
+   * 
+   * <p>This method will search for the named file in 4 locations, each 
+   * subsequent found file being used to augment and over write the properties 
+   * of previously loaded properties files:<ol>
+   * <li>currently set class path</li>
+   * <li>home directory of the user running the JVM</li>
+   * <li>directory specified by the {@code cfg.dir} system property</li>
+   * <li>current working directory</li></ol></p>
+   *
+   * <p>If the secure flag is set to true, the system will treat the proxy 
+   * password as encrypted text. In this case the value will be read in, 
+   * decrypted and reset in the runtime properties in it decrypted form (plain 
+   * text). If the secure flag is set to false, the proxy password will be used 
+   * as is.</p>
+   * 
+   * @param name base name of the file to load
+   * @param secure flag indicating the proxy password is to be treated as 
+   *        encrypted text
+   */
+  private static void load( String name, boolean secure ) {
+
+    // Start with loading the property file from the classpath
+    loadPropertiesFromClasspath( name );
+
+    // then load from the user's home directory
+    loadPropertiesIntoSystem( name, false, System.getProperty( "user.home" ) );
+
+    // Load specific property files from the configuration directory which
+    // over-rides those properties previously loaded
+    loadPropertiesIntoSystem( name, false, getConfigPath() );
+
+    // Next load specific property files from the current working directory
+    loadPropertiesIntoSystem( name, false, System.getProperty( "user.dir" ) );
+
+    // Load the Java proxy authenticator if system properties contained the
+    // necessary data
+    installProxyAuthenticatorIfNeeded( secure );
+
+  }
+
+
+
+
+  /**
    * Return the configuration path set in the system properties.
    * 
    * @return the path to the configuration property
@@ -71,7 +153,13 @@ public class SystemPropertyUtil {
 
 
   /**
-   * @param key
+   * Searches for the property with the specified key in this property list. 
+   * 
+   * <p>If the key is not found in this property list, the default property 
+   * list, and its defaults, recursively, are then checked. The method returns 
+   * {@code null] if the property is not found.</p>
+
+   * @param key the property key
    * 
    * @return the system property with the given key, or its default if it is set.
    */
@@ -83,13 +171,64 @@ public class SystemPropertyUtil {
 
 
   /**
+   * Get the value of the encrypted property
+   * 
+   * @param key the property to retrieve
+   * 
+   * @return the value currently set in that property
+   */
+  public static String getEncryptedString( final String key ) {
+    String rawValue = getString( key );
+    if ( rawValue != null ) {
+      try {
+        return CipherUtil.decrypt( rawValue );
+      } catch ( Exception e ) {
+        e.printStackTrace();
+      }
+    }
+    return null;
+  }
+
+
+
+
+  /**
+     * Get an encrypted value suitable for placing in an encrypted property
+     * 
+     * @param value The value to encrypt
+     * 
+     * @return cipher text suitable for placing in a properties file, or null if 
+     *         the passed value is null or encryption errors have occurred.
+     */
+  public static String encryptString( final String value ) {
+    if ( value != null ) {
+      try {
+        return CipherUtil.encrypt( value );
+      } catch ( Exception e ) {
+        e.printStackTrace();
+      }
+    }
+    return null;
+  }
+
+
+
+
+  /**
    * Load the Java proxy authenticator if the are system properties specifying
    * a proxy host and user name.
+   * 
+   * @param secure if true, the password will be treated as an encrypted 
+   *        string, if false the string will be read in as plain text;
    */
-  private static void installProxyAuthenticatorIfNeeded() {
+  private static void installProxyAuthenticatorIfNeeded( boolean secure ) {
     final String user = System.getProperty( PROXY_USER );
-    final String password = System.getProperty( PROXY_PASSWORD );
+    final String password = secure ? getEncryptedString( PROXY_PASSWORD ) : getString( PROXY_PASSWORD );
     final String host = System.getProperty( PROXY_HOST );
+
+    if ( secure ) {
+      System.setProperty( PROXY_PASSWORD, password );
+    }
 
     if ( isNotBlank( user ) && isNotBlank( password ) && isNotBlank( host ) ) {
       LOG.debug( String.format( "Detected http proxy settings (%s@%s), will setup authenticator", user, host ) );
@@ -144,46 +283,6 @@ public class SystemPropertyUtil {
    */
   public static boolean isNotBlank( final String str ) {
     return !isBlank( str );
-  }
-
-
-
-
-  /**
-   * Load the property file with the given name into the system properties.
-   * 
-   * <p>The name is appended with '.properties' to come up with the full file 
-   * name. Therefore passing this the name of 'app' will result in a file named
-   * 'app.properties' being used.</p>
-   * 
-   * <p>This method will search for the named file in 4 locations, each 
-   * subsequent found file being used to augment and over write the properties 
-   * of previously loaded properties files:<ol>
-   * <li>currently set class path</li>
-   * <li>home directory of the user running the JVM</li>
-   * <li>directory specified by the {@code cfg.dir} system property</li>
-   * <li>current working directory</li></ol></p>
-   * 
-   * @param name root name of the file to search
-   */
-  public static void load( final String name ) {
-
-    // Start with loading the property file from the classpath
-    loadPropertiesFromClasspath( name );
-
-    // then load from the user's home directory
-    loadPropertiesIntoSystem( name, false, System.getProperty( "user.home" ) );
-
-    // Load specific property files from the configuration directory which
-    // over-rides those properties previously loaded
-    loadPropertiesIntoSystem( name, false, getConfigPath() );
-
-    // Next load specific property files from the current working directory
-    loadPropertiesIntoSystem( name, false, System.getProperty( "user.dir" ) );
-
-    // Load the Java proxy authenticator if system properties contained the
-    // necessary data
-    installProxyAuthenticatorIfNeeded();
   }
 
 

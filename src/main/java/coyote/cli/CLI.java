@@ -94,7 +94,7 @@ public class CLI extends AbstractAction {
   public static void main( final String[] args ) {
 
     // Load system properties from conventional locations
-    SystemPropertyUtil.load( appname );
+    SystemPropertyUtil.loadSecure( appname );
 
     // Load configuration context from the class path
     @SuppressWarnings("resource")
