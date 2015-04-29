@@ -19,7 +19,6 @@ import org.apache.http.client.methods.HttpGet;
 
 import coyote.dataframe.DataFrame;
 import coyote.dataframe.marshal.JSONMarshaler;
-import coyote.snow.worker.Response;
 
 
 /**

@@ -36,29 +36,34 @@ ext {
 	springContextVersion = '4.0.2.RELEASE'
 	springJdbcVersion = '3.2.8.RELEASE'
 	cliVersion = '1.2'
-	
+	dataFrameVersion = '0.2'
+	httpclientVersion = '4.3.2'
 }
+
 dependencies {
 	
-		// Logging via slf4j and Logback implementation
-		compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
-		compile "ch.qos.logback:logback-classic:$logbackVersion"
-		compile "ch.qos.logback:logback-core:$logbackVersion"
+	// Logging via slf4j and Logback implementation
+	compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
+	compile "ch.qos.logback:logback-classic:$logbackVersion"
+	compile "ch.qos.logback:logback-core:$logbackVersion"
 
-		// SNAPI (ServiceNow API)
-		compile "coyote:snapi:$snapiVersion"
-    
-		// Command line tools
-		compile "commons-cli:commons-cli:$cliVersion"
+	// Command line tools
+	compile "commons-cli:commons-cli:$cliVersion"
 
-		// For connections to databases
-		compile "org.springframework:spring-jdbc:$springJdbcVersion"
+	// For connections to databases
+	compile "org.springframework:spring-jdbc:$springJdbcVersion"
 
-		// For providing extensibility through IoC
-		compile "org.springframework:spring-context:$springContextVersion"
+	// For providing extensibility through IoC
+	compile "org.springframework:spring-context:$springContextVersion"
 
-		// UnitTesting
-		testCompile "junit:junit:$junitVersion"	
+	// For web services
+	compile "org.apache.httpcomponents:httpclient:$httpclientVersion"
+	
+    // Abstract Data Type
+    compile "coyote:DataFrame:$dataFrameVersion"
+
+	// UnitTesting
+	testCompile "junit:junit:$junitVersion"	
 }
 
 

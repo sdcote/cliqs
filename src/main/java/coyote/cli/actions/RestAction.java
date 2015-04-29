@@ -31,7 +31,6 @@ import org.apache.http.util.EntityUtils;
 import coyote.commons.StringUtil;
 import coyote.dataframe.DataFrame;
 import coyote.dataframe.marshal.JSONMarshaler;
-import coyote.snow.worker.Response;
 
 
 public abstract class RestAction extends AbstractAction {
