@@ -26,8 +26,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -50,8 +48,6 @@ import coyote.commons.SystemPropertyUtil;
  * 
  */
 public class CLI extends AbstractAction {
-
-  private static final Logger LOG = LoggerFactory.getLogger( CLI.class );
 
   private static String VERSION = "0.1 dev - build 11 Mar 2015";
   private static CommandLine _cmd = null;
