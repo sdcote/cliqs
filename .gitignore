@@ -26,7 +26,10 @@ csharp/
 # Testing Results #
 ###################
 *.log
-/cliqs.properties
+
+# Local (dev) Properties #
+##########################
+/*.properties
 
 
 # Package Files #
