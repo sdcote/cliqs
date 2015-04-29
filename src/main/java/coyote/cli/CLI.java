@@ -93,7 +93,7 @@ public class CLI extends AbstractAction {
    */
   public static void main( final String[] args ) {
 
-    // Load system properties from conventional locations
+    // Load system properties from conventional locations using encryption
     SystemPropertyUtil.loadSecure( appname );
 
     // Load configuration context from the class path
