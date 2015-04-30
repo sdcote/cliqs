@@ -137,7 +137,7 @@ public class SystemPropertyUtil {
   public static String getConfigPath() {
     // Check for ending file separator and remove it if found
     String retval = System.getProperty( CONFIG_DIR );
-    if ( retval == null ) {
+    if ( isBlank( retval ) ) {
       LOG.debug( String.format( "No configuration override path found in '%s' system property", CONFIG_DIR ) );
       return "";
     }
@@ -179,7 +179,7 @@ public class SystemPropertyUtil {
    */
   public static String getEncryptedString( final String key ) {
     String rawValue = getString( key );
-    if ( rawValue != null ) {
+    if ( isNotBlank( rawValue ) ) {
       try {
         return CipherUtil.decrypt( rawValue );
       } catch ( Exception e ) {
@@ -201,7 +201,7 @@ public class SystemPropertyUtil {
      *         the passed value is null or encryption errors have occurred.
      */
   public static String encryptString( final String value ) {
-    if ( value != null ) {
+    if ( isNotBlank( value ) ) {
       try {
         return CipherUtil.encrypt( value );
       } catch ( Exception e ) {
@@ -226,7 +226,7 @@ public class SystemPropertyUtil {
     final String password = secure ? getEncryptedString( PROXY_PASSWORD ) : getString( PROXY_PASSWORD );
     final String host = System.getProperty( PROXY_HOST );
 
-    if ( secure ) {
+    if ( secure && isNotBlank( password ) ) {
       System.setProperty( PROXY_PASSWORD, password );
     }
 
