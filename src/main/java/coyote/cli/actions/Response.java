@@ -42,6 +42,9 @@ public class Response {
   private DataFrame errorFrame = null;
   private String status = null;
 
+  /** multi-purpose attribute normally used with 300 series errors containing alink to the redirected location */
+  private String link = null;
+
 
 
 
@@ -157,6 +160,32 @@ public class Response {
    */
   public void setStatusPhrase( final String phrase ) {
     httpStatusPhrase = phrase;
+  }
+
+
+
+
+  /**
+   * Some responses (e.g. 301, 302) contain a link to the location of where the 
+   * request should go for the requested resource.
+   * 
+   * <p>Not all responses will contain a link. The most common scenario is when 
+   * the status code is in the 300 series.</p>
+   * 
+   * @return the link set in this response
+   */
+  public String getLink() {
+    return link;
+  }
+
+
+
+
+  /**
+   * @param link the link to set
+   */
+  public void setLink( String link ) {
+    this.link = link;
   }
 
 }

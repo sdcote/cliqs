@@ -128,6 +128,11 @@ public abstract class RestAction extends AbstractAction {
       response.setStatusPhrase( httpResponse.getStatusLine().getReasonPhrase() );
       debug( String.format( "Request:\r\n    %s\r\nResponse:\r\n    %s", request.toString(), httpResponse.getStatusLine().toString() ) );
 
+      // Status of a 301 or a 302, look for a Location: header in the response and use that URL
+      if ( status >= 300 && status < 400 ) {
+        response.setLink( httpResponse.getFirstHeader( "Location" ).getValue() );
+      }
+
       // Check for a body
       if ( httpResponse.getEntity() != null ) {
 
