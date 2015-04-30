@@ -188,4 +188,72 @@ public class Response {
     this.link = link;
   }
 
+
+
+
+  /**
+   * Informational - Request received, continuing process.
+   * @return true if the status code is in the 1XX range
+   */
+  public boolean isInformational() {
+    return ( httpStatusCode < 200 );
+  }
+
+
+
+
+  /**
+   * Success - The action requested by the client was received, understood, 
+   * accepted and processed successfully.
+   * @return true if the status code is in the 2XX range
+   */
+  public boolean isSuccessful() {
+    return ( httpStatusCode >= 200 && httpStatusCode < 300 );
+  }
+
+
+
+
+  /**
+   * Redirection - The client must take additional action to complete the 
+   * request.
+   * @return true if the status code is in the 3XX range
+   */
+  public boolean isRedirect() {
+    return ( httpStatusCode >= 300 && httpStatusCode < 400 );
+  }
+
+
+
+
+  /**
+   * Error - Either client or server error.
+   * @return true if the status code is greater than or equal to 400.
+   */
+  public boolean isError() {
+    return ( httpStatusCode >= 400 );
+  }
+
+
+
+
+  /**
+   * Client Error- Indicate cases in which the client seems to have erred.
+   * @return true if the status code is in the 4XX range
+   */
+  public boolean isClientError() {
+    return ( httpStatusCode >= 400 && httpStatusCode < 500 );
+  }
+
+
+
+
+  /**
+   * Server Error - The server failed to fulfill an apparently valid request.
+   * @return true if the status code is in the 5XX range
+   */
+  public boolean isServerError() {
+    return ( httpStatusCode >= 500 );
+  }
+
 }
