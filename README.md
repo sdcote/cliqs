@@ -13,6 +13,19 @@ be invoked from the command line as a part of one application; adding as many
 actions as needed all with the ability to specify and parse their own command
 line arguments.
 
+### Why A Command Line Interface
+Beyond the simplicity of calling a simple command to do your bidding from any
+terminal window (you don't need a windowing manager so CLIs are great for *nix 
+tasks), CLI utilities can be placed in scripts for automated processing.
+
+So you have a command which does something useful; maybe it's a part of you 
+daily or weekly routine. Now imagine creating a cron or scheduled job to 
+perform that task without you. CLI utilities allow your logic to be called 
+almost anywhere, at any time; with or without an operator.  This is true 
+utility.
+
+In many ways, a CLI is far more useful than a web interface.
+
 Structure
 =========
 Java code is placed into 'Actions' which can be called from the command line 
