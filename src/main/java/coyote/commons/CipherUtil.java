@@ -104,6 +104,13 @@ public class CipherUtil {
 
 
 
+  /**
+   * Return e particular cipher by its name.
+   * 
+   * @param name name of the cipher to retrieve.
+   * 
+   * @return the cipher registered with that name or null if none by that name exists.
+   */
   public static Cipher getCipher( final String name ) {
     if ( name != null ) {
       final Cipher retval = cipherMap.get( name.toLowerCase() );
