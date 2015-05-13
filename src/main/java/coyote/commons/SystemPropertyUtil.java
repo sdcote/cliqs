@@ -157,11 +157,13 @@ public class SystemPropertyUtil {
    * 
    * <p>If the key is not found in this property list, the default property 
    * list, and its defaults, recursively, are then checked. The method returns 
-   * {@code null] if the property is not found.</p>
+   * {@code null} if the property is not found.</p>
 
    * @param key the property key
    * 
    * @return the system property with the given key, or its default if it is set.
+   * 
+   * @see #setString(String, String)
    */
   public static String getString( final String key ) {
     return System.getProperties().getProperty( key );
@@ -334,8 +336,10 @@ public class SystemPropertyUtil {
    * 
    * @param name the name of the property to set
    * @param value the value of the property to set
+   * 
+   * @see #getString(String)
    */
-  public static void setProperty( final String name, final String value ) {
+  public static void setString( final String name, final String value ) {
     if ( name != null ) {
       if ( value != null ) {
         System.getProperties().setProperty( name, value );
