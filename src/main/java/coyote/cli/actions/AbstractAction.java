@@ -528,4 +528,21 @@ public abstract class AbstractAction implements Action {
   public void validate() throws ActionException {
 
   }
+  
+  /**
+   * @return the output print stream
+   */
+  protected static PrintStream getOutStream() {
+    return OUT;
+  }
+
+
+
+
+  /**
+   * @param out the output print stream to use
+   */
+  protected static void setOutStream( PrintStream out ) {
+    OUT = out;
+  }
 }
